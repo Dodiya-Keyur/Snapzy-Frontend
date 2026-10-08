@@ -1,7 +1,7 @@
 function Register() {
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-            <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm">
+        <div className="flex min-h-screen items-center bg-slate-200 justify-center ">
+            <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm my-5 mx-5">
 
                 <h2 className="text-2xl font-bold text-gray-900">
                     Register
