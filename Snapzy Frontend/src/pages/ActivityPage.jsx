@@ -373,8 +373,8 @@ function ActivityPage() {
               key={filter.id}
               onClick={() => setActiveFilter(filter.id)}
               className={`whitespace-nowrap rounded-full px-6 py-2.5 text-sm font-medium transition ${activeFilter === filter.id
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                 }`}
             >
               {filter.label}

@@ -1,22 +1,24 @@
+
+import SkeletonLoader from "../components/SkeletonLoader";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function ProtectedRoute() {
-    const {
-        isAuthenticated,
-        loading,
-    } = useAuth();
+    const { isAuthenticated, loading } = useAuth();
 
     if (loading) {
-        return (
-            <div className="flex min-h-screen items-center justify-center">
-                <p>Loading...</p>
-            </div>
-        );
+        return <SkeletonLoader />
     }
 
+    console.log(isAuthenticated)
+
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        return (
+            <Navigate
+                to="/login"
+                replace
+            />
+        );
     }
 
     return <Outlet />;

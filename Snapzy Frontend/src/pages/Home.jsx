@@ -1,7 +1,32 @@
 import RightSidebar from "../components/RightSidebar";
 import PostFeed from "../components/PostFeed";
+import { useEffect, useState } from "react";
+import SkeletonLoader from "../components/SkeletonLoader";
 
 function Home() {
+
+    // const [loading, setLoading] = useState(true);
+
+    // useEffect(() => {
+    //     async function fetchPosts() {
+    //         try {
+    //             const response = await getAllPosts();
+    //             setPosts(response.data.posts);
+    //         } catch (error) {
+    //             console.error("Failed to fetch posts:", error);
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     }
+
+    //     fetchPosts();
+    // }, []);
+
+    // if (loading) {
+    //     return <SkeletonLoader />;
+    // }
+
+
     return (
         <div className="min-h-screen bg-gray-50 mt-[-30px] md:mt-1">
             <main className="">

@@ -14,10 +14,13 @@ import {
     LogOut,
     Camera,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import api from "../api/axios";
 
 const Sidebar = () => {
 
     const navigate = useNavigate();
+    const { logout } = useAuth();
 
     const menuItems = [
         {
@@ -60,8 +63,9 @@ const Sidebar = () => {
         },
     ];
 
-    const handleLogout = () => {
-        // Call your logout API here
+    const handleLogout = async () => {
+
+        await api.post("/auth/logout");
 
         navigate("/login");
     };
@@ -133,7 +137,7 @@ const Sidebar = () => {
                 </ul>
 
             </nav>
-                    
+
 
             {/* ================= BOTTOM MENU ================= */}
             <div className="border-t border-gray-400 pt-4">

@@ -15,7 +15,7 @@ import { AuthProvider } from "./context/AuthContext";
 import App from "./App.jsx";
 
 // Route guards
-import PublicRoute from "./routes/PublicRoute";
+// import PublicRoute from "./routes/PublicRoute";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 // Pages
@@ -32,14 +32,14 @@ import SettingPage from "./pages/SettingPage.jsx";
 import PageNotFound from "./pages/PageNotFound.jsx";
 
 // Router configuration
+
 const router = createBrowserRouter([
-  // Protected routes
   {
-    element: <PublicRoute />,
+    path: "/",
+    element: <App />,
     children: [
       {
-        path: "/",
-        element: <App />,
+        element: <ProtectedRoute />,
         children: [
           {
             index: true,
@@ -77,28 +77,20 @@ const router = createBrowserRouter([
       },
     ],
   },
-
-  // Public routes
   {
-    element: <PublicRoute />,
-    children: [
-      {
-        path: "/login",
-        element: <Login />,
-      },
-      {
-        path: "/register",
-        element: <Register />,
-      },
-    ],
+    path: "/login",
+    element: <Login />,
   },
-
-  // Page not found
+  {
+    path: "/register",
+    element: <Register />,
+  },
   {
     path: "*",
     element: <PageNotFound />,
   },
 ]);
+
 
 // Render application
 createRoot(document.getElementById("root")).render(

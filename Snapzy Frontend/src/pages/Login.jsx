@@ -1,30 +1,44 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getCurrentUser, loginUser } from "../api/authApi";
+import api from "../api/axios";
+import { useAuth } from "../context/AuthContext";
 
 function Login() {
 
     const navigate = useNavigate();
+
+    const { checkAuth } = useAuth();
 
     const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
 
+
     async function handleLogin(e) {
         e.preventDefault();
+
         setMessage("");
         setLoading(true);
 
         try {
-            await loginUser({
+            await api.post("/auth/login", {
                 identifier: identifier.trim().toLowerCase(),
                 password,
             });
 
-            await getCurrentUser();
+            // Refresh authentication state after login
+            const currentUser = await checkAuth();
 
-            navigate("/");
+            if (!currentUser) {
+                setMessage(
+                    "Login succeeded, but your session could not be verified. Please try again."
+                );
+                return;
+            }
+
+            navigate("/", { replace: true });
+
         } catch (error) {
             setMessage(
                 error.response?.data?.message ||
@@ -35,6 +49,7 @@ function Login() {
             setLoading(false);
         }
     }
+
 
     return (
         <div className="min-h-screen bg-slate-200 flex items-center justify-center px-4">
