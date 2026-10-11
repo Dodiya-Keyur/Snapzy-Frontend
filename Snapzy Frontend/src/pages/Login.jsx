@@ -1,6 +1,41 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { getCurrentUser, loginUser } from "../api/authApi";
 
 function Login() {
+
+    const navigate = useNavigate();
+
+    const [identifier, setIdentifier] = useState("");
+    const [password, setPassword] = useState("");
+    const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        setMessage("");
+        setLoading(true);
+
+        try {
+            await loginUser({
+                identifier: identifier.trim().toLowerCase(),
+                password,
+            });
+
+            await getCurrentUser();
+
+            navigate("/");
+        } catch (error) {
+            setMessage(
+                error.response?.data?.message ||
+                error.message ||
+                "Login failed. Please try again."
+            );
+        } finally {
+            setLoading(false);
+        }
+    }
+
     return (
         <div className="min-h-screen bg-slate-200 flex items-center justify-center px-4">
             <div className="w-full max-w-md">
@@ -24,21 +59,24 @@ function Login() {
                         Enter your details to continue.
                     </p>
 
-                    <form className="mt-7 space-y-5">
+                    <form onSubmit={handleLogin} className="mt-7 space-y-5">
 
                         {/* Email */}
                         <div>
                             <label
-                                htmlFor="email"
+                                htmlFor="identifier"
                                 className="block text-sm font-medium text-gray-700 mb-2"
                             >
-                                Email
+                                Username / Email
                             </label>
 
                             <input
-                                id="email"
-                                type="email"
-                                placeholder="Enter your email"
+                                id="identifier"
+                                type="text"
+                                value={identifier}
+                                placeholder="Enter your username or email"
+                                onChange={(e) => setIdentifier(e.target.value)}
+                                required
                                 className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-black focus:ring-1 focus:ring-black"
                             />
                         </div>
@@ -65,9 +103,21 @@ function Login() {
                                 id="password"
                                 type="password"
                                 placeholder="Enter your password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
                                 className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-black focus:ring-1 focus:ring-black"
                             />
                         </div>
+
+                        {message && (
+                            <p
+                                role="alert"
+                                className="text-sm text-red-600"
+                            >
+                                {message}
+                            </p>
+                        )}
 
                         {/* Remember Me */}
                         <div className="flex items-center gap-2">
@@ -85,13 +135,16 @@ function Login() {
                             </label>
                         </div>
 
+
                         {/* Login Button */}
                         <button
                             type="submit"
+                            disabled={loading}
                             className="w-full rounded-lg bg-black py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
                         >
-                            Login
+                            {loading ? "Logging in..." : "Login"}
                         </button>
+
                     </form>
 
                     {/* Register */}
