@@ -133,10 +133,10 @@ const Sidebar = () => {
                 </ul>
 
             </nav>
-
+                    
 
             {/* ================= BOTTOM MENU ================= */}
-            <div className="border-t border-gray-200 pt-4">
+            <div className="border-t border-gray-400 pt-4">
 
                 <ul className="space-y-2">
 

@@ -6,12 +6,12 @@ import MobileHeader from "./components/MobileHeader"
 
 function App() {
     return (
-        <div className="min-h-screen bg-gray-50 mt-20 md:mt-0">
+        <div className="min-h-screen bg-neutral-50 mt-20 md:mt-0">
 
             <MobileHeader />
             <Sidebar />
 
-            <main className="min-h-screen md:ml-[270px] lg:ml-[300px]">
+            <main className="min-h-screen md:ml-[270px] lg:ml-[300px] mb-15 md:mb-5">
                 <Outlet />
             </main>
 
