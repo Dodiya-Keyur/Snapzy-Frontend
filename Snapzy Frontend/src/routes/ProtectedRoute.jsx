@@ -10,8 +10,6 @@ function ProtectedRoute() {
         return <SkeletonLoader />
     }
 
-    console.log(isAuthenticated)
-
     if (!isAuthenticated) {
         return (
             <Navigate

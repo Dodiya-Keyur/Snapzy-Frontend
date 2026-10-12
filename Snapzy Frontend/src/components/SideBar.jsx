@@ -20,7 +20,6 @@ import api from "../api/axios";
 const Sidebar = () => {
 
     const navigate = useNavigate();
-    const { logout } = useAuth();
 
     const menuItems = [
         {
