@@ -31,7 +31,7 @@ function BottomNav() {
     ];
 
     return (
-        <nav className="fixed bottom-0 left-0 z-50 w-full border-t border-gray-200 bg-white md:hidden">
+        <nav id="mobile-bottom-nav" className="fixed bottom-0 left-0 z-50 w-full border-t border-gray-200 bg-white md:hidden transition-all duration-200">
             <div className="mx-auto flex h-16 max-w-md items-center justify-around px-2">
                 {navItems.map((item) => {
                     const Icon = item.icon;

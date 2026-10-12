@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   User,
   Lock,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 
 function SettingsPage() {
+  const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(false);
   const [privateAccount, setPrivateAccount] = useState(false);
   const [activityStatus, setActivityStatus] = useState(true);
@@ -68,7 +70,7 @@ function SettingsPage() {
               icon={<User size={20} />}
               title="Edit Profile"
               description="Update your profile picture, bio and personal information"
-              onClick={() => console.log("Edit Profile")}
+              onClick={() => navigate("/edit-profile")}
             />
 
             <SettingsItem

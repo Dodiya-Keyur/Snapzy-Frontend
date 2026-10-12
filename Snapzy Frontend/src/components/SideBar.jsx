@@ -200,7 +200,7 @@ const Sidebar = () => {
                                         className={`flex w-full items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-medium transition ${isActive
                                             ? "bg-gray-100 font-semibold text-gray-900"
                                             : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100"
-                                            }`}
+                                        }`}
                                     >
                                         <Icon
                                             size={20}
@@ -237,7 +237,7 @@ const Sidebar = () => {
                     className={`group flex w-full items-center gap-4 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${isMoreOpen
                         ? "bg-white text-gray-900 font-semibold shadow-xs"
                         : "text-gray-600 hover:bg-gray-200/60 hover:text-gray-900"
-                        }`}
+                    }`}
                 >
                     <Menu
                         size={22}
