@@ -14,8 +14,7 @@ import { AuthProvider } from "./context/AuthContext";
 // Layout
 import App from "./App.jsx";
 
-// Route guards
-// import PublicRoute from "./routes/PublicRoute";
+import PublicRoute from "./routes/PublicRoute";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 // Pages
@@ -25,9 +24,11 @@ import Register from "./pages/Register.jsx";
 import SearchPage from "./pages/SearchPage.jsx";
 import NotificationsPage from "./pages/NotificationsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import EditProfile from "./pages/EditProfile.jsx";
 import CreatePost from "./pages/CreatePost.jsx";
 import ActivityPage from "./pages/ActivityPage.jsx";
 import SavedPost from "./pages/SavedPost.jsx";
+import LikedPost from "./pages/LikedPost.jsx";
 import SettingPage from "./pages/SettingPage.jsx";
 import PageNotFound from "./pages/PageNotFound.jsx";
 
@@ -58,6 +59,14 @@ const router = createBrowserRouter([
             element: <ProfilePage />,
           },
           {
+            path: "edit-profile",
+            element: <EditProfile />,
+          },
+          {
+            path: "profile/edit",
+            element: <EditProfile />,
+          },
+          {
             path: "create-post",
             element: <CreatePost />,
           },
@@ -70,6 +79,14 @@ const router = createBrowserRouter([
             element: <SavedPost />,
           },
           {
+            path: "liked",
+            element: <LikedPost />,
+          },
+          {
+            path: "likes",
+            element: <LikedPost />,
+          },
+          {
             path: "setting",
             element: <SettingPage />,
           },
@@ -78,12 +95,17 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/register",
-    element: <Register />,
+    element: <PublicRoute />,
+    children: [
+      {
+        path: "/login",
+        element: <Login />,
+      },
+      {
+        path: "/register",
+        element: <Register />,
+      },
+    ],
   },
   {
     path: "*",
