@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+body.mobile-menu-open #mobile-top-header,
+body.mobile-menu-open #mobile-bottom-nav {
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none !important;
+	transition:
+		opacity 0.2s ease,
+		visibility 0.2s ease !important;
+}

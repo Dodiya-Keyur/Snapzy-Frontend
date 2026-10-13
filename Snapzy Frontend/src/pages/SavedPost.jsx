@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Bookmark, Image as ImageIcon, LoaderCircle } from "lucide-react";
-import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import api from "../api/axios";
 
 function SavedPost() {
   const [savedPosts, setSavedPosts] = useState([]);
@@ -18,32 +16,27 @@ function SavedPost() {
       setLoading(true);
       setError("");
 
-      const token = localStorage.getItem("token");
+      const response = await api.get("/users/me/saved-posts");
 
-      const response = await axios.get(
-        `${API_URL} /api/v1 / saves`,
-        {
-          headers: {
-            Authorization: `Bearer ${token} `,
-          },
-          withCredentials: true,
-        }
-      );
-
-      // Adjust this according to your backend response structure.
+      // Adjust according to backend response structure
       const posts =
+        response.data?.savedPosts ??
         response.data?.data?.savedPosts ??
-        response.data?.data?.posts ??
+        response.data?.posts ??
         response.data?.data ??
         [];
 
       setSavedPosts(Array.isArray(posts) ? posts : []);
     } catch (err) {
       console.error("Error fetching saved posts:", err);
-      setError(
-        err.response?.data?.message ||
-        "Unable to load saved posts. Please try again."
-      );
+      if (err.response?.status === 401) {
+        setSavedPosts([]);
+      } else {
+        setError(
+          err.response?.data?.message ||
+          "Unable to load saved posts. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
     }

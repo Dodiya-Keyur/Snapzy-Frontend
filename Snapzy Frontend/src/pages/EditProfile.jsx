@@ -198,8 +198,8 @@ function EditProfile() {
       console.error("Failed to update profile:", err);
       setErrorMessage(
         err.response?.data?.message ||
-        err.message ||
-        "Failed to update profile. Please try again."
+          err.message ||
+          "Failed to update profile. Please try again."
       );
     } finally {
       setSaving(false);
@@ -411,10 +411,11 @@ function EditProfile() {
                   <span>Bio</span>
                 </label>
                 <span
-                  className={`text-xs ${formData.bio.length > 140
-                    ? "font-semibold text-amber-600"
-                    : "text-gray-400"
-                    }`}
+                  className={`text-xs ${
+                    formData.bio.length > 140
+                      ? "font-semibold text-amber-600"
+                      : "text-gray-400"
+                  }`}
                 >
                   {formData.bio.length}/150
                 </span>

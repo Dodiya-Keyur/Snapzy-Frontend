@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Heart } from "lucide-react";
+import { formatTimeAgo } from "../utils/formatTime";
 
 const CommentModal = ({
     post,
@@ -17,7 +18,7 @@ const CommentModal = ({
     const listEndRef = useRef(null);
     const inputRef = useRef(null);
 
-    const me = currentUser.username;
+    const me = currentUser?.username;
 
     // Top-level comments and their replies
     const topLevel = comments.filter((c) => !c.parentId);
@@ -101,7 +102,7 @@ const CommentModal = ({
     const renderComment = (c, isReply = false) => (
         <div key={c.id} className="flex items-start gap-3">
             <img
-                src={c.avatar}
+                src={c.avatar || c.profilePicture || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face"}
                 alt={c.username}
                 className={`rounded-full object-cover shrink-0 ${isReply ? "w-6 h-6" : "w-8 h-8"
                     }`}
@@ -175,12 +176,12 @@ const CommentModal = ({
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
                         <div className="flex items-center gap-3">
                             <img
-                                src={post.user.avatar}
-                                alt={post.user.username}
+                                src={post.user?.profilePicture || post.user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face"}
+                                alt={post.user?.username || "user"}
                                 className="w-8 h-8 rounded-full object-cover"
                             />
                             <p className="text-sm font-semibold text-gray-900">
-                                {post.user.username}
+                                {post.user?.username || "user"}
                             </p>
                         </div>
                         <button
@@ -198,19 +199,19 @@ const CommentModal = ({
                         {post.caption && (
                             <div className="flex items-start gap-3">
                                 <img
-                                    src={post.user.avatar}
-                                    alt={post.user.username}
+                                    src={post.user?.profilePicture || post.user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face"}
+                                    alt={post.user?.username || "user"}
                                     className="w-8 h-8 rounded-full object-cover shrink-0"
                                 />
                                 <div className="min-w-0">
                                     <p className="text-sm text-gray-800 leading-5 break-words">
                                         <span className="font-semibold mr-2">
-                                            {post.user.username}
+                                            {post.user?.username || "user"}
                                         </span>
                                         {post.caption}
                                     </p>
                                     <span className="text-xs text-gray-500">
-                                        {post.createdAt}
+                                        {formatTimeAgo(post.createdAt)}
                                     </span>
                                 </div>
                             </div>
@@ -291,7 +292,7 @@ const CommentModal = ({
                         className="flex items-center gap-3 px-4 py-3 border-t border-gray-200"
                     >
                         <img
-                            src={currentUser.avatar}
+                            src={currentUser?.profilePicture || currentUser?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face"}
                             alt="You"
                             className="w-8 h-8 rounded-full object-cover shrink-0"
                         />

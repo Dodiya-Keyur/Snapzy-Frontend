@@ -219,8 +219,8 @@ function MobileHeader() {
                 createPortal(
                     <div
                         className={`fixed inset-0 z-[9999] flex h-full w-full flex-col bg-gray-50 md:hidden transition-all duration-300 ease-out ${isMenuOpen
-                                ? "translate-y-0 opacity-100 pointer-events-auto"
-                                : "translate-y-full opacity-0 pointer-events-none"
+                            ? "translate-y-0 opacity-100 pointer-events-auto"
+                            : "translate-y-full opacity-0 pointer-events-none"
                             }`}
                         role="dialog"
                         aria-modal="true"
