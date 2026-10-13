@@ -29,10 +29,76 @@ function SearchPage() {
     const [loading, setLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
 
+    // Track which user IDs are followed
+    const [followingIds, setFollowingIds] = useState(new Set());
+    const [followingActionId, setFollowingActionId] = useState(null);
+
     // Selected post for modal detail view
     const [selectedPost, setSelectedPost] = useState(null);
 
     const debounceTimerRef = useRef(null);
+
+    // Fetch list of users the current user is following
+    const fetchMyFollowing = useCallback(async () => {
+        try {
+            const res = await api.get("/users/me/following");
+            const list = res.data?.following || [];
+            const ids = new Set(
+                list.map((item) =>
+                    (item.following?._id || item.following || item._id).toString()
+                )
+            );
+            setFollowingIds(ids);
+        } catch (err) {
+            console.warn("Failed to fetch following list:", err);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchMyFollowing();
+    }, [fetchMyFollowing]);
+
+    // Handle Follow / Unfollow
+    const handleToggleFollow = async (userId) => {
+        if (!userId || followingActionId === userId) return;
+
+        const idStr = userId.toString();
+        const isCurrentlyFollowing = followingIds.has(idStr);
+
+        // Optimistic toggle
+        setFollowingIds((prev) => {
+            const next = new Set(prev);
+            if (isCurrentlyFollowing) {
+                next.delete(idStr);
+            } else {
+                next.add(idStr);
+            }
+            return next;
+        });
+
+        try {
+            setFollowingActionId(userId);
+            if (isCurrentlyFollowing) {
+                await api.delete(`/follows/unfollow/${userId}`);
+            } else {
+                await api.post(`/follows/follow/${userId}`);
+            }
+        } catch (err) {
+            console.error("Follow/unfollow error:", err);
+            // Revert on error
+            setFollowingIds((prev) => {
+                const next = new Set(prev);
+                if (isCurrentlyFollowing) {
+                    next.add(idStr);
+                } else {
+                    next.delete(idStr);
+                }
+                return next;
+            });
+        } finally {
+            setFollowingActionId(null);
+        }
+    };
 
     // Perform API search
     const executeSearch = useCallback(async (query) => {
@@ -149,8 +215,8 @@ function SearchPage() {
                     <button
                         onClick={() => setFilter("all")}
                         className={`flex-1 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition ${filter === "all"
-                            ? "bg-gray-900 text-white shadow-xs"
-                            : "text-gray-600 hover:bg-gray-100"
+                                ? "bg-gray-900 text-white shadow-xs"
+                                : "text-gray-600 hover:bg-gray-100"
                             }`}
                     >
                         All {hasSearched && `(${totalResultsCount})`}
@@ -159,8 +225,8 @@ function SearchPage() {
                     <button
                         onClick={() => setFilter("user")}
                         className={`flex-1 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition ${filter === "user"
-                            ? "bg-gray-900 text-white shadow-xs"
-                            : "text-gray-600 hover:bg-gray-100"
+                                ? "bg-gray-900 text-white shadow-xs"
+                                : "text-gray-600 hover:bg-gray-100"
                             }`}
                     >
                         Users {hasSearched && `(${users.length})`}
@@ -169,8 +235,8 @@ function SearchPage() {
                     <button
                         onClick={() => setFilter("post")}
                         className={`flex-1 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition ${filter === "post"
-                            ? "bg-gray-900 text-white shadow-xs"
-                            : "text-gray-600 hover:bg-gray-100"
+                                ? "bg-gray-900 text-white shadow-xs"
+                                : "text-gray-600 hover:bg-gray-100"
                             }`}
                     >
                         Posts {hasSearched && `(${posts.length})`}
@@ -280,21 +346,32 @@ function SearchPage() {
                                             authUser &&
                                             (authUser._id === u._id ||
                                                 authUser.username === u.username);
+                                        const isFollowing =
+                                            u._id && followingIds.has(String(u._id));
+                                        const isActionLoading =
+                                            followingActionId === u._id;
 
                                         return (
                                             <div
                                                 key={u._id || u.username}
-                                                className="flex items-center justify-between rounded-2xl border border-gray-200/90 bg-white p-4 shadow-xs transition hover:border-gray-300"
+                                                onClick={() =>
+                                                    navigate(
+                                                        isSelf
+                                                            ? "/profile"
+                                                            : `/profile/${u._id || u.username}`
+                                                    )
+                                                }
+                                                className="group flex items-center justify-between rounded-2xl border border-gray-200/90 bg-white p-4 shadow-xs transition hover:border-gray-300 hover:shadow-sm cursor-pointer"
                                             >
                                                 <div className="flex items-center gap-3.5 min-w-0">
                                                     <img
                                                         src={userAvatar}
                                                         alt={u.username}
-                                                        className="h-12 w-12 rounded-full object-cover ring-1 ring-gray-100 shrink-0"
+                                                        className="h-12 w-12 rounded-full object-cover ring-1 ring-gray-100 shrink-0 group-hover:scale-105 transition-transform"
                                                     />
 
                                                     <div className="min-w-0">
-                                                        <h3 className="font-semibold text-sm text-gray-900 truncate">
+                                                        <h3 className="font-semibold text-sm text-gray-900 truncate group-hover:text-blue-600 transition-colors">
                                                             {u.username}
                                                         </h3>
                                                         {u.name && (
@@ -310,12 +387,35 @@ function SearchPage() {
                                                     </div>
                                                 </div>
 
-                                                <button
-                                                    onClick={() => navigate(isSelf ? "/profile" : "/profile")}
-                                                    className="rounded-xl bg-gray-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-black active:scale-95 shrink-0"
-                                                >
-                                                    {isSelf ? "Your Profile" : "View"}
-                                                </button>
+                                                {isSelf ? (
+                                                    <span className="rounded-xl bg-gray-100 px-3.5 py-1.5 text-xs font-semibold text-gray-600 shrink-0">
+                                                        Your Profile
+                                                    </span>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleToggleFollow(u._id);
+                                                        }}
+                                                        disabled={isActionLoading}
+                                                        className={`rounded-xl px-4 py-2 text-xs font-semibold transition active:scale-95 shrink-0 min-w-[90px] text-center ${isFollowing
+                                                                ? "bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200"
+                                                                : "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
+                                                            }`}
+                                                    >
+                                                        {isActionLoading ? (
+                                                            <LoaderCircle
+                                                                size={14}
+                                                                className="animate-spin mx-auto"
+                                                            />
+                                                        ) : isFollowing ? (
+                                                            "Following"
+                                                        ) : (
+                                                            "Follow"
+                                                        )}
+                                                    </button>
+                                                )}
                                             </div>
                                         );
                                     })}
@@ -418,7 +518,22 @@ function SearchPage() {
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
-                            <div className="flex items-center gap-3">
+                            <div
+                                onClick={() => {
+                                    const authorId = selectedPost.user?._id;
+                                    const isSelf =
+                                        authUser &&
+                                        (authUser._id === authorId ||
+                                            authUser.username === selectedPost.user?.username);
+                                    navigate(
+                                        isSelf
+                                            ? "/profile"
+                                            : `/profile/${authorId || selectedPost.user?.username}`
+                                    );
+                                    setSelectedPost(null);
+                                }}
+                                className="flex items-center gap-3 cursor-pointer group"
+                            >
                                 <img
                                     src={
                                         selectedPost.user?.profilePicture ||
@@ -426,10 +541,10 @@ function SearchPage() {
                                         DEFAULT_AVATAR
                                     }
                                     alt={selectedPost.user?.username || "author"}
-                                    className="h-9 w-9 rounded-full object-cover ring-1 ring-gray-200"
+                                    className="h-9 w-9 rounded-full object-cover ring-1 ring-gray-200 group-hover:ring-blue-500 transition"
                                 />
                                 <div>
-                                    <p className="text-sm font-semibold text-gray-900 leading-tight">
+                                    <p className="text-sm font-semibold text-gray-900 leading-tight group-hover:text-blue-600 transition">
                                         {selectedPost.user?.username || "anonymous"}
                                     </p>
                                     <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -520,3 +635,4 @@ function SearchPage() {
 }
 
 export default SearchPage;
+

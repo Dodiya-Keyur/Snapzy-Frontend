@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
     Heart,
     MessageCircle,
@@ -19,12 +19,19 @@ const DEFAULT_AVATAR =
 
 function ProfilePage() {
     const navigate = useNavigate();
+    const { userId } = useParams();
     const { user: authUser, checkAuth } = useAuth();
 
-    const [profileUser, setProfileUser] = useState(authUser || null);
+    const isOwnProfile =
+        !userId ||
+        (authUser && (authUser._id === userId || authUser.username === userId));
+
+    const [profileUser, setProfileUser] = useState(isOwnProfile ? authUser : null);
     const [posts, setPosts] = useState([]);
     const [followersCount, setFollowersCount] = useState(0);
     const [followingCount, setFollowingCount] = useState(0);
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followLoading, setFollowLoading] = useState(false);
     const [loading, setLoading] = useState(true);
 
     // Selected post for modal detail view
@@ -37,45 +44,90 @@ function ProfilePage() {
         try {
             setLoading(true);
 
-            // 1. Fetch user data & follower counts from /users/me
-            const userPromise = api.get("/users/me").catch((err) => {
-                console.warn("Failed to fetch /users/me:", err);
-                return null;
-            });
+            if (isOwnProfile) {
+                // 1. Fetch own user data & follower counts from /users/me
+                const userPromise = api.get("/users/me").catch((err) => {
+                    console.warn("Failed to fetch /users/me:", err);
+                    return null;
+                });
 
-            // 2. Fetch user's own posts from /users/me/posts
-            const postsPromise = api.get("/users/me/posts").catch((err) => {
-                console.warn("Failed to fetch /users/me/posts:", err);
-                return null;
-            });
+                // 2. Fetch own posts from /users/me/posts
+                const postsPromise = api.get("/users/me/posts").catch((err) => {
+                    console.warn("Failed to fetch /users/me/posts:", err);
+                    return null;
+                });
 
-            const [userRes, postsRes] = await Promise.all([userPromise, postsPromise]);
+                const [userRes, postsRes] = await Promise.all([userPromise, postsPromise]);
 
-            if (userRes?.data) {
-                const fetchedUser =
-                    userRes.data.User ??
-                    userRes.data.user ??
-                    authUser;
+                if (userRes?.data) {
+                    const fetchedUser =
+                        userRes.data.User ??
+                        userRes.data.user ??
+                        authUser;
 
-                if (fetchedUser) {
-                    setProfileUser(fetchedUser);
+                    if (fetchedUser) {
+                        setProfileUser(fetchedUser);
+                    }
+
+                    if (typeof userRes.data.followersCount === "number") {
+                        setFollowersCount(userRes.data.followersCount);
+                    }
+                    if (typeof userRes.data.followingCount === "number") {
+                        setFollowingCount(userRes.data.followingCount);
+                    }
+                } else if (authUser) {
+                    setProfileUser(authUser);
                 }
 
-                if (typeof userRes.data.followersCount === "number") {
-                    setFollowersCount(userRes.data.followersCount);
+                if (postsRes?.data) {
+                    const fetchedPosts = Array.isArray(postsRes.data.posts)
+                        ? postsRes.data.posts
+                        : [];
+                    setPosts(fetchedPosts);
                 }
-                if (typeof userRes.data.followingCount === "number") {
-                    setFollowingCount(userRes.data.followingCount);
-                }
-            } else if (authUser) {
-                setProfileUser(authUser);
-            }
+            } else {
+                // Fetch other user's data from /users/:userId and posts from /users/:userId/posts
+                const userPromise = api.get(`/users/${userId}`).catch((err) => {
+                    console.warn("Failed to fetch /users/:userId:", err);
+                    return null;
+                });
+                const postsPromise = api.get(`/users/${userId}/posts`).catch((err) => {
+                    console.warn("Failed to fetch /users/:userId/posts:", err);
+                    return null;
+                });
+                const followingPromise = api.get("/users/me/following").catch(() => null);
 
-            if (postsRes?.data) {
-                const fetchedPosts = Array.isArray(postsRes.data.posts)
-                    ? postsRes.data.posts
-                    : [];
-                setPosts(fetchedPosts);
+                const [userRes, postsRes, followingRes] = await Promise.all([
+                    userPromise,
+                    postsPromise,
+                    followingPromise,
+                ]);
+
+                if (userRes?.data) {
+                    const fetchedUser = userRes.data.User ?? userRes.data.user;
+                    if (fetchedUser) setProfileUser(fetchedUser);
+                    if (typeof userRes.data.followersCount === "number") {
+                        setFollowersCount(userRes.data.followersCount);
+                    }
+                    if (typeof userRes.data.followingCount === "number") {
+                        setFollowingCount(userRes.data.followingCount);
+                    }
+                }
+
+                if (followingRes?.data) {
+                    const list = followingRes.data.following || [];
+                    const isFollowed = list.some(
+                        (f) => (f.following?._id || f.following) === userId
+                    );
+                    setIsFollowing(isFollowed);
+                }
+
+                if (postsRes?.data) {
+                    const fetchedPosts = Array.isArray(postsRes.data.posts)
+                        ? postsRes.data.posts
+                        : [];
+                    setPosts(fetchedPosts);
+                }
             }
         } catch (error) {
             console.error("Error loading profile data:", error);
@@ -86,7 +138,30 @@ function ProfilePage() {
 
     useEffect(() => {
         loadProfileData();
-    }, []);
+    }, [userId, authUser?._id]);
+
+    // Handle Follow / Unfollow for another user
+    const handleFollowToggle = async () => {
+        if (!userId || isOwnProfile || followLoading) return;
+        const nextFollowing = !isFollowing;
+        setIsFollowing(nextFollowing);
+        setFollowersCount((prev) => (nextFollowing ? prev + 1 : Math.max(0, prev - 1)));
+
+        try {
+            setFollowLoading(true);
+            if (nextFollowing) {
+                await api.post(`/follows/follow/${userId}`);
+            } else {
+                await api.delete(`/follows/unfollow/${userId}`);
+            }
+        } catch (err) {
+            console.error("Follow error:", err);
+            setIsFollowing(!nextFollowing);
+            setFollowersCount((prev) => (!nextFollowing ? prev + 1 : Math.max(0, prev - 1)));
+        } finally {
+            setFollowLoading(false);
+        }
+    };
 
     // Share Profile
     const handleShareProfile = async () => {
@@ -157,7 +232,7 @@ function ProfilePage() {
                             <div className="flex-1 w-full space-y-4 text-center sm:text-left">
                                 <div className="h-6 w-40 bg-gray-200 rounded mx-auto sm:mx-0" />
                                 <div className="h-4 w-28 bg-gray-200 rounded mx-auto sm:mx-0" />
-                                <div className="flex justify-center sm:justify-start gap-8 pt-2">
+                                <div className="flex justify-center sm:j    ustify-start gap-8 pt-2">
                                     <div className="h-8 w-16 bg-gray-200 rounded" />
                                     <div className="h-8 w-16 bg-gray-200 rounded" />
                                     <div className="h-8 w-16 bg-gray-200 rounded" />
@@ -236,14 +311,27 @@ function ProfilePage() {
                                 </p>
                             )}
 
-                            {/* 5. Action Buttons: Edit Profile and Share Profile side-by-side */}
+                            {/* 5. Action Buttons: Edit Profile or Follow/Following */}
                             <div className="flex items-center gap-3 pt-2">
-                                <button
-                                    onClick={() => navigate("/edit-profile")}
-                                    className="rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-black active:scale-95 shadow-xs"
-                                >
-                                    Edit Profile
-                                </button>
+                                {isOwnProfile ? (
+                                    <button
+                                        onClick={() => navigate("/edit-profile")}
+                                        className="rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-black active:scale-95 shadow-xs"
+                                    >
+                                        Edit Profile
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={handleFollowToggle}
+                                        disabled={followLoading}
+                                        className={`rounded-xl px-6 py-2 text-sm font-semibold transition active:scale-95 shadow-xs ${isFollowing
+                                                ? "bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200"
+                                                : "bg-blue-600 text-white hover:bg-blue-700"
+                                            }`}
+                                    >
+                                        {isFollowing ? "Following" : "Follow"}
+                                    </button>
+                                )}
                                 <button
                                     onClick={handleShareProfile}
                                     className="rounded-xl bg-gray-100 px-5 py-2 text-sm font-semibold text-gray-800 transition hover:bg-gray-200 active:scale-95 border border-gray-200"
@@ -307,12 +395,25 @@ function ProfilePage() {
 
                         {/* Action Buttons: Side-by-Side (Edit profile & Share profile) */}
                         <div className="flex items-center gap-2 pt-1">
-                            <button
-                                onClick={() => navigate("/edit-profile")}
-                                className="flex-1 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-95 py-2 px-3 text-xs font-semibold text-gray-900 transition text-center"
-                            >
-                                Edit profile
-                            </button>
+                            {isOwnProfile ? (
+                                <button
+                                    onClick={() => navigate("/edit-profile")}
+                                    className="flex-1 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-95 py-2 px-3 text-xs font-semibold text-gray-900 transition text-center"
+                                >
+                                    Edit profile
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleFollowToggle}
+                                    disabled={followLoading}
+                                    className={`flex-1 rounded-xl active:scale-95 py-2 px-3 text-xs font-semibold transition text-center ${isFollowing
+                                            ? "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-200"
+                                            : "bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
+                                        }`}
+                                >
+                                    {isFollowing ? "Following" : "Follow"}
+                                </button>
+                            )}
                             <button
                                 onClick={handleShareProfile}
                                 className="flex-1 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-95 py-2 px-3 text-xs font-semibold text-gray-900 transition text-center"
@@ -503,18 +604,22 @@ function ProfilePage() {
 
                             {/* Modal Footer Controls */}
                             <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-2">
-                                <button
-                                    onClick={() => handleDeletePost(selectedPost._id || selectedPost.id)}
-                                    disabled={deletingPostId === (selectedPost._id || selectedPost.id)}
-                                    className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-red-600 hover:text-red-700 transition disabled:opacity-50"
-                                >
-                                    {deletingPostId === (selectedPost._id || selectedPost.id) ? (
-                                        <LoaderCircle size={15} className="animate-spin" />
-                                    ) : (
-                                        <Trash2 size={15} />
-                                    )}
-                                    <span>Delete Post</span>
-                                </button>
+                                {isOwnProfile ? (
+                                    <button
+                                        onClick={() => handleDeletePost(selectedPost._id || selectedPost.id)}
+                                        disabled={deletingPostId === (selectedPost._id || selectedPost.id)}
+                                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-red-600 hover:text-red-700 transition disabled:opacity-50"
+                                    >
+                                        {deletingPostId === (selectedPost._id || selectedPost.id) ? (
+                                            <LoaderCircle size={15} className="animate-spin" />
+                                        ) : (
+                                            <Trash2 size={15} />
+                                        )}
+                                        <span>Delete Post</span>
+                                    </button>
+                                ) : (
+                                    <div />
+                                )}
 
                                 <button
                                     onClick={() => setSelectedPost(null)}
@@ -532,3 +637,5 @@ function ProfilePage() {
 }
 
 export default ProfilePage;
+
+
