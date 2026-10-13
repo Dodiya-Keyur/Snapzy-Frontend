@@ -55,13 +55,21 @@ function EditProfile() {
         setInitialLoading(true);
         let currentUser = user;
 
-        if (!currentUser && checkAuth) {
-          currentUser = await checkAuth();
+        // Fetch fresh user data directly from backend
+        try {
+          const res = await api.get("/users/me");
+          if (res.data?.User || res.data?.user) {
+            currentUser = res.data.User || res.data.user;
+          }
+        } catch {
+          if (!currentUser && checkAuth) {
+            currentUser = await checkAuth();
+          }
         }
 
         if (currentUser) {
           setFormData({
-            name: currentUser.name || "",
+            name: currentUser.name || currentUser.username || "",
             username: currentUser.username || "",
             bio: currentUser.bio || "",
           });
@@ -69,7 +77,7 @@ function EditProfile() {
             currentUser.profilePicture ||
             currentUser.avatar ||
             currentUser.profilePic ||
-            "";
+            DEFAULT_AVATAR_URL;
           setPhotoPreview(avatar);
         }
       } catch (err) {
@@ -198,8 +206,8 @@ function EditProfile() {
       console.error("Failed to update profile:", err);
       setErrorMessage(
         err.response?.data?.message ||
-          err.message ||
-          "Failed to update profile. Please try again."
+        err.message ||
+        "Failed to update profile. Please try again."
       );
     } finally {
       setSaving(false);
@@ -364,7 +372,6 @@ function EditProfile() {
                 onChange={handleChange}
                 placeholder="Enter your full name"
                 maxLength={50}
-                required
                 className="w-full rounded-2xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-black focus:bg-white focus:ring-1 focus:ring-black"
               />
             </div>
@@ -411,11 +418,10 @@ function EditProfile() {
                   <span>Bio</span>
                 </label>
                 <span
-                  className={`text-xs ${
-                    formData.bio.length > 140
-                      ? "font-semibold text-amber-600"
-                      : "text-gray-400"
-                  }`}
+                  className={`text-xs ${formData.bio.length > 140
+                    ? "font-semibold text-amber-600"
+                    : "text-gray-400"
+                    }`}
                 >
                   {formData.bio.length}/150
                 </span>
