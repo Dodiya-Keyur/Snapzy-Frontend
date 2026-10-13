@@ -37,8 +37,48 @@ function ProfilePage() {
 
     // Selected post for modal detail view
     const [selectedPost, setSelectedPost] = useState(null);
+    const [modalIsLiked, setModalIsLiked] = useState(false);
+    const [modalLikesCount, setModalLikesCount] = useState(0);
+    const [modalLikeLoading, setModalLikeLoading] = useState(false);
     const [deletingPostId, setDeletingPostId] = useState(null);
     const [copiedProfile, setCopiedProfile] = useState(false);
+
+    // Fetch isliked and accurate likesCount when opening post modal
+    useEffect(() => {
+        if (!selectedPost) return;
+        const postId = selectedPost._id || selectedPost.id;
+        if (!postId) return;
+
+        setModalLikesCount(Math.max(0, selectedPost.likesCount ?? selectedPost.likes ?? 0));
+        setModalIsLiked(Boolean(selectedPost.isLiked));
+
+        let isMounted = true;
+        api.get(`/posts/${postId}/isliked`)
+            .then((res) => {
+                if (isMounted && res.data) {
+                    if (typeof res.data.isLiked === "boolean") {
+                        setModalIsLiked(res.data.isLiked);
+                    }
+                    if (typeof res.data.likesCount === "number") {
+                        const verifiedCount = Math.max(0, res.data.likesCount);
+                        setModalLikesCount(verifiedCount);
+                        // Also update posts grid state if count was outdated
+                        setPosts((prev) =>
+                            prev.map((p) =>
+                                (p._id || p.id) === postId ? { ...p, likesCount: verifiedCount } : p
+                            )
+                        );
+                    }
+                }
+            })
+            .catch((err) => {
+                console.warn("Failed to fetch isliked status in profile:", err);
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [selectedPost]);
 
     // Fetch user profile info, stats, and user posts from backend
     const loadProfileData = async () => {
@@ -209,6 +249,50 @@ function ProfilePage() {
             alert(err.response?.data?.message || "Failed to delete post. Please try again.");
         } finally {
             setDeletingPostId(null);
+        }
+    };
+
+    // Toggle like in post modal
+    const handleModalLikeToggle = async () => {
+        if (!selectedPost || modalLikeLoading) return;
+        const postId = selectedPost._id || selectedPost.id;
+        if (!postId) return;
+
+        const nextLiked = !modalIsLiked;
+        setModalIsLiked(nextLiked);
+        setModalLikesCount((prev) => (nextLiked ? prev + 1 : Math.max(0, prev - 1)));
+
+        try {
+            setModalLikeLoading(true);
+            let res;
+            if (nextLiked) {
+                res = await api.post(`/posts/${postId}/like`);
+            } else {
+                res = await api.delete(`/posts/${postId}/unlike`);
+            }
+
+            if (res.data) {
+                const count = res.data.likesCount ?? res.data.totalLikes;
+                if (typeof count === "number") {
+                    const safeCount = Math.max(0, count);
+                    setModalLikesCount(safeCount);
+                    setPosts((prev) =>
+                        prev.map((p) =>
+                            (p._id || p.id) === postId ? { ...p, likesCount: safeCount, isLiked: nextLiked } : p
+                        )
+                    );
+                }
+                if (typeof res.data.isLiked === "boolean") {
+                    setModalIsLiked(res.data.isLiked);
+                }
+            }
+        } catch (err) {
+            console.error("Failed to toggle like in modal:", err);
+            // Revert state on error
+            setModalIsLiked(!nextLiked);
+            setModalLikesCount((prev) => (!nextLiked ? prev + 1 : Math.max(0, prev - 1)));
+        } finally {
+            setModalLikeLoading(false);
         }
     };
 
@@ -451,8 +535,8 @@ function ProfilePage() {
                             {posts.map((post) => {
                                 const postId = post._id || post.id;
                                 const postImage = post.image || post.imageUrl || "";
-                                const postLikes = post.likesCount ?? post.likes ?? 0;
-                                const postComments = post.commentCount ?? post.comments ?? 0;
+                                const postLikes = Math.max(0, post.likesCount ?? post.likes ?? 0);
+                                const postComments = Math.max(0, post.commentCount ?? post.comments ?? 0);
 
                                 return (
                                     <div
@@ -566,16 +650,33 @@ function ProfilePage() {
                         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
                             {/* Likes and Comments Counters */}
                             <div className="flex items-center gap-6 text-sm text-gray-700">
-                                <div className="flex items-center gap-1.5 font-semibold">
-                                    <Heart size={20} className="fill-red-500 text-red-500" />
+                                <button
+                                    type="button"
+                                    onClick={handleModalLikeToggle}
+                                    disabled={modalLikeLoading}
+                                    className="flex items-center gap-1.5 font-semibold transition hover:opacity-80 active:scale-95 cursor-pointer disabled:opacity-60"
+                                    title={modalIsLiked ? "Unlike post" : "Like post"}
+                                >
+                                    <Heart
+                                        size={20}
+                                        className={
+                                            modalIsLiked
+                                                ? "fill-red-500 text-red-500 scale-105 transition-transform"
+                                                : "text-gray-600 hover:text-red-500 transition-colors"
+                                        }
+                                    />
                                     <span>
-                                        {(selectedPost.likesCount ?? selectedPost.likes ?? 0).toLocaleString()} likes
+                                        {Math.max(0, modalLikesCount).toLocaleString()} likes
                                     </span>
-                                </div>
+                                </button>
                                 <div className="flex items-center gap-1.5 font-semibold">
                                     <MessageCircle size={20} className="text-gray-600" />
                                     <span>
-                                        {(selectedPost.commentCount ?? selectedPost.comments ?? 0).toLocaleString()} comments
+                                        {Math.max(
+                                            0,
+                                            selectedPost.commentCount ?? selectedPost.comments ?? 0
+                                        ).toLocaleString()}{" "}
+                                        comments
                                     </span>
                                 </div>
                             </div>

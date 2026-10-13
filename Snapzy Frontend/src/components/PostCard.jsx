@@ -42,9 +42,35 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
 
     // States
     const [liked, setLiked] = useState(Boolean(post.isLiked ?? post.liked));
-    const [likesCount, setLikesCount] = useState(post.likesCount ?? post.likes ?? 0);
+    const [likesCount, setLikesCount] = useState(
+        Math.max(0, post.likesCount ?? post.likes ?? 0)
+    );
+    const [likeLoading, setLikeLoading] = useState(false);
     const [saved, setSaved] = useState(Boolean(post.isSaved ?? post.saved));
     const [isFollowing, setIsFollowing] = useState(postUser.isFollowing ?? false);
+
+    // Fetch initial isLiked and verified likesCount from backend
+    useEffect(() => {
+        if (!post?._id) return;
+        let isMounted = true;
+        api.get(`/posts/${post._id}/isliked`)
+            .then((res) => {
+                if (isMounted && res.data) {
+                    if (typeof res.data.isLiked === "boolean") {
+                        setLiked(res.data.isLiked);
+                    }
+                    if (typeof res.data.likesCount === "number") {
+                        setLikesCount(Math.max(0, res.data.likesCount));
+                    }
+                }
+            })
+            .catch((err) => {
+                console.warn("Failed to fetch like status:", err);
+            });
+        return () => {
+            isMounted = false;
+        };
+    }, [post?._id]);
 
     // Micro-interactions
     const [showHeartBurst, setShowHeartBurst] = useState(false);
@@ -73,18 +99,37 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
     }, [showMenu]);
 
     const handleLike = async () => {
+        if (likeLoading || !post?._id) return;
         const nextLiked = !liked;
+        // Optimistic UI update
         setLiked(nextLiked);
         setLikesCount((prev) => (nextLiked ? prev + 1 : Math.max(0, prev - 1)));
 
         try {
+            setLikeLoading(true);
+            let res;
             if (nextLiked) {
-                await api.post(`/posts/${post._id}/like`);
+                res = await api.post(`/posts/${post._id}/like`);
             } else {
-                await api.delete(`/posts/${post._id}/unlike`);
+                res = await api.delete(`/posts/${post._id}/unlike`);
+            }
+
+            if (res.data) {
+                const count = res.data.likesCount ?? res.data.totalLikes;
+                if (typeof count === "number") {
+                    setLikesCount(Math.max(0, count));
+                }
+                if (typeof res.data.isLiked === "boolean") {
+                    setLiked(res.data.isLiked);
+                }
             }
         } catch (err) {
             console.warn("Like action failed:", err);
+            // Revert state on error
+            setLiked(!nextLiked);
+            setLikesCount((prev) => (!nextLiked ? prev + 1 : Math.max(0, prev - 1)));
+        } finally {
+            setLikeLoading(false);
         }
     };
 
