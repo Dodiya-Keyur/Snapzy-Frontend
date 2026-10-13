@@ -30,6 +30,7 @@ import ActivityPage from "./pages/ActivityPage.jsx";
 import SavedPost from "./pages/SavedPost.jsx";
 import LikedPost from "./pages/LikedPost.jsx";
 import SettingPage from "./pages/SettingPage.jsx";
+import EditPost from "./pages/EditPost.jsx";
 import PageNotFound from "./pages/PageNotFound.jsx";
 
 // Router configuration
@@ -73,6 +74,14 @@ const router = createBrowserRouter([
           {
             path: "create-post",
             element: <CreatePost />,
+          },
+          {
+            path: "edit-post/:postId",
+            element: <EditPost />,
+          },
+          {
+            path: "post/edit/:postId",
+            element: <EditPost />,
           },
           {
             path: "activity",
@@ -126,3 +135,4 @@ createRoot(document.getElementById("root")).render(
     </AuthProvider>
   </StrictMode>
 );
+

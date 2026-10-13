@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     Heart,
     MessageCircle,
@@ -8,6 +9,7 @@ import {
     MapPin,
     Check,
     Link2,
+    Pencil,
 } from "lucide-react";
 import CommentModal from "./CommentModal";
 import api from "../api/axios";
@@ -20,6 +22,7 @@ const DEFAULT_USER = {
 };
 
 const PostCard = ({ post, currentUser: propCurrentUser }) => {
+    const navigate = useNavigate();
     const { user: authUser } = useAuth() || {};
     const currentUser = propCurrentUser || authUser || DEFAULT_USER;
 
@@ -228,6 +231,18 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
 
                             {showMenu && (
                                 <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-lg py-1.5 z-20 text-xs text-gray-700">
+                                    {isOwnPost && (
+                                        <button
+                                            onClick={() => {
+                                                navigate(`/edit-post/${post._id}`);
+                                                setShowMenu(false);
+                                            }}
+                                            className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-gray-50 text-left transition text-gray-900 font-medium"
+                                        >
+                                            <Pencil size={15} className="text-gray-500" />
+                                            Edit Post
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => {
                                             handleShare();
