@@ -94,8 +94,6 @@ function CreatePost() {
         formData
       );
 
-      console.log("Post created:", response.data);
-
       navigate("/", { replace: true });
     } catch (error) {
       console.error(

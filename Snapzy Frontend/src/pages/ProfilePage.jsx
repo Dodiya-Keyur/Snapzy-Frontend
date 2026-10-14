@@ -410,8 +410,8 @@ function ProfilePage() {
                                         onClick={handleFollowToggle}
                                         disabled={followLoading}
                                         className={`rounded-xl px-6 py-2 text-sm font-semibold transition active:scale-95 shadow-xs ${isFollowing
-                                            ? "bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200"
-                                            : "bg-blue-600 text-white hover:bg-blue-700"
+                                                ? "bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200"
+                                                : "bg-blue-600 text-white hover:bg-blue-700"
                                             }`}
                                     >
                                         {isFollowing ? "Following" : "Follow"}
@@ -492,8 +492,8 @@ function ProfilePage() {
                                     onClick={handleFollowToggle}
                                     disabled={followLoading}
                                     className={`flex-1 rounded-xl active:scale-95 py-2 px-3 text-xs font-semibold transition text-center ${isFollowing
-                                        ? "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-200"
-                                        : "bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
+                                            ? "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-200"
+                                            : "bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
                                         }`}
                                 >
                                     {isFollowing ? "Following" : "Follow"}

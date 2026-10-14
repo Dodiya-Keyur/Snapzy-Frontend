@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
     Heart,
@@ -21,6 +22,71 @@ const DEFAULT_USER = {
     avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face",
 };
 
+// Shared following cache & in-flight promise to avoid redundant API requests across PostCards
+let myFollowingCache = null;
+let myFollowingPromise = null;
+
+const fetchMyFollowingIds = async () => {
+    if (myFollowingCache) return myFollowingCache;
+    if (myFollowingPromise) return myFollowingPromise;
+
+    myFollowingPromise = api
+        .get("/users/me/following")
+        .then((res) => {
+            const list = res.data?.following || [];
+            const ids = new Set(
+                list.map((item) =>
+                    (item.following?._id || item.following || item._id || item).toString()
+                )
+            );
+            myFollowingCache = ids;
+            myFollowingPromise = null;
+            return ids;
+        })
+        .catch((err) => {
+            console.warn("Failed to fetch my following list:", err);
+            myFollowingPromise = null;
+            return myFollowingCache || new Set();
+        });
+
+    return myFollowingPromise;
+};
+
+// Shared saved posts cache & in-flight promise to avoid redundant API requests across PostCards
+let mySavedPostsCache = null;
+let mySavedPostsPromise = null;
+
+const fetchMySavedPostIds = async () => {
+    if (mySavedPostsCache) return mySavedPostsCache;
+    if (mySavedPostsPromise) return mySavedPostsPromise;
+
+    mySavedPostsPromise = api
+        .get("/users/me/saved-posts")
+        .then((res) => {
+            const list =
+                res.data?.savedPosts ??
+                res.data?.data?.savedPosts ??
+                res.data?.posts ??
+                res.data?.data ??
+                [];
+            const ids = new Set(
+                list
+                    .map((item) => (item?._id || item?.post?._id || item)?.toString())
+                    .filter(Boolean)
+            );
+            mySavedPostsCache = ids;
+            mySavedPostsPromise = null;
+            return ids;
+        })
+        .catch((err) => {
+            console.warn("Failed to fetch my saved posts list:", err);
+            mySavedPostsPromise = null;
+            return mySavedPostsCache || new Set();
+        });
+
+    return mySavedPostsPromise;
+};
+
 const PostCard = ({ post, currentUser: propCurrentUser }) => {
     const navigate = useNavigate();
     const { user: authUser } = useAuth() || {};
@@ -34,11 +100,32 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face";
     const postImage = post.image || post.imageUrl || "";
 
+    const postId = (post?._id || post?.id)?.toString();
+    const currentUserId = (currentUser?._id || authUser?._id || "")?.toString();
+    const postAuthorId = (postUser?._id || (typeof postUser === "string" ? postUser : ""))?.toString();
+    const currentUserName = currentUser?.username || authUser?.username || "";
+
     const isOwnPost = Boolean(
-        currentUser &&
-        ((currentUser._id && postUser._id && currentUser._id === postUser._id) ||
-            (currentUser.username && authorUsername && currentUser.username === authorUsername))
+        (currentUserId && postAuthorId && currentUserId === postAuthorId) ||
+        (currentUserName && authorUsername && currentUserName.toLowerCase() === authorUsername.toLowerCase())
     );
+
+    // Navigate to user profile
+    const handleOpenProfile = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (isOwnPost) {
+            navigate("/profile");
+        } else if (postAuthorId) {
+            navigate(`/profile/${postAuthorId}`);
+        } else if (authorUsername && authorUsername !== "anonymous") {
+            navigate(`/profile/${authorUsername}`);
+        } else {
+            navigate("/profile");
+        }
+    };
 
     // States
     const [liked, setLiked] = useState(Boolean(post.isLiked ?? post.liked));
@@ -46,8 +133,101 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         Math.max(0, post.likesCount ?? post.likes ?? 0)
     );
     const [likeLoading, setLikeLoading] = useState(false);
-    const [saved, setSaved] = useState(Boolean(post.isSaved ?? post.saved));
-    const [isFollowing, setIsFollowing] = useState(postUser.isFollowing ?? false);
+    const [saved, setSaved] = useState(() => {
+        if (typeof post.isSaved === "boolean") return post.isSaved;
+        if (typeof post.saved === "boolean") return post.saved;
+        if (postId && mySavedPostsCache) {
+            return mySavedPostsCache.has(postId);
+        }
+        return false;
+    });
+    const [saveLoading, setSaveLoading] = useState(false);
+
+    // Fetch initial saved status and listen for cross-post saved changes
+    useEffect(() => {
+        if (!postId) return;
+
+        if (typeof post.isSaved === "boolean") {
+            setSaved(post.isSaved);
+        } else if (typeof post.saved === "boolean") {
+            setSaved(post.saved);
+        } else {
+            fetchMySavedPostIds().then((ids) => {
+                if (ids && postId) {
+                    setSaved(ids.has(postId));
+                }
+            });
+        }
+
+        const handleSavedSync = (e) => {
+            if (e.detail?.postId && postId && e.detail.postId.toString() === postId) {
+                setSaved(Boolean(e.detail.isSaved));
+            }
+        };
+
+        window.addEventListener("snapzy:saved-changed", handleSavedSync);
+        return () => {
+            window.removeEventListener("snapzy:saved-changed", handleSavedSync);
+        };
+    }, [postId, post.isSaved, post.saved]);
+
+    const [isFollowing, setIsFollowing] = useState(() => {
+        if (typeof postUser.isFollowing === "boolean") {
+            return postUser.isFollowing;
+        }
+        if (postAuthorId && myFollowingCache) {
+            return myFollowingCache.has(postAuthorId);
+        }
+        return false;
+    });
+    const [followLoading, setFollowLoading] = useState(false);
+    const [showUnfollowModal, setShowUnfollowModal] = useState(false);
+
+    // Sync initial follow status & keep state updated across cards
+    useEffect(() => {
+        if (!postAuthorId || isOwnPost) return;
+
+        if (typeof postUser.isFollowing === "boolean") {
+            setIsFollowing(postUser.isFollowing);
+        } else {
+            fetchMyFollowingIds().then((ids) => {
+                if (ids && postAuthorId) {
+                    setIsFollowing(ids.has(postAuthorId));
+                }
+            });
+        }
+
+        const handleFollowSync = (e) => {
+            if (e.detail?.userId && postAuthorId && e.detail.userId === postAuthorId) {
+                setIsFollowing(Boolean(e.detail.isFollowing));
+            }
+        };
+
+        window.addEventListener("snapzy:follow-changed", handleFollowSync);
+        return () => {
+            window.removeEventListener("snapzy:follow-changed", handleFollowSync);
+        };
+    }, [postAuthorId, isOwnPost, postUser.isFollowing]);
+
+    // Modal scroll lock and ESC key handling
+    useEffect(() => {
+        if (!showUnfollowModal) return;
+
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                setShowUnfollowModal(false);
+            }
+        };
+
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.body.style.overflow = prevOverflow;
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [showUnfollowModal]);
 
     // Fetch initial isLiked and verified likesCount from backend
     useEffect(() => {
@@ -143,31 +323,141 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
     };
 
     const handleSave = async () => {
+        if (!postId || saveLoading) return;
         const nextSaved = !saved;
+
+        // Optimistic UI update
         setSaved(nextSaved);
+        if (mySavedPostsCache) {
+            if (nextSaved) {
+                mySavedPostsCache.add(postId);
+            } else {
+                mySavedPostsCache.delete(postId);
+            }
+        }
+        window.dispatchEvent(
+            new CustomEvent("snapzy:saved-changed", {
+                detail: { postId, isSaved: nextSaved },
+            })
+        );
 
         try {
+            setSaveLoading(true);
             if (nextSaved) {
-                await api.post(`/posts/${post._id}/save`);
+                await api.post(`/posts/${postId}/save`);
             } else {
-                await api.delete(`/posts/${post._id}/unsave`);
+                await api.delete(`/posts/${postId}/save`);
             }
         } catch (err) {
             console.warn("Save action failed:", err);
+            // Revert state on error
+            setSaved(!nextSaved);
+            if (mySavedPostsCache) {
+                if (!nextSaved) {
+                    mySavedPostsCache.add(postId);
+                } else {
+                    mySavedPostsCache.delete(postId);
+                }
+            }
+            window.dispatchEvent(
+                new CustomEvent("snapzy:saved-changed", {
+                    detail: { postId, isSaved: !nextSaved },
+                })
+            );
+        } finally {
+            setSaveLoading(false);
         }
     };
 
-    const handleFollowToggle = async () => {
-        const nextFollowing = !isFollowing;
-        setIsFollowing(nextFollowing);
+    // Follow button click handler
+    const handleFollowButtonClick = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (isOwnPost || followLoading || !postAuthorId) return;
+
+        if (isFollowing) {
+            // Give popup to confirm unfollow user
+            setShowUnfollowModal(true);
+        } else {
+            // Follow user directly
+            executeFollow();
+        }
+    };
+
+    // Follow user directly
+    const executeFollow = async () => {
+        if (!postAuthorId || followLoading) return;
+
         try {
-            if (nextFollowing) {
-                await api.post(`/users/${postUser._id}/follow`);
-            } else {
-                await api.delete(`/users/${postUser._id}/unfollow`);
+            setFollowLoading(true);
+            setIsFollowing(true);
+
+            if (myFollowingCache) {
+                myFollowingCache.add(postAuthorId);
             }
+            window.dispatchEvent(
+                new CustomEvent("snapzy:follow-changed", {
+                    detail: { userId: postAuthorId, isFollowing: true },
+                })
+            );
+
+            await api.post(`/follows/follow/${postAuthorId}`);
         } catch (err) {
-            console.warn("Follow action:", err);
+            console.warn("Follow action failed:", err);
+            // 409 means user is already followed
+            if (err.response?.status !== 409) {
+                setIsFollowing(false);
+                if (myFollowingCache) {
+                    myFollowingCache.delete(postAuthorId);
+                }
+                window.dispatchEvent(
+                    new CustomEvent("snapzy:follow-changed", {
+                        detail: { userId: postAuthorId, isFollowing: false },
+                    })
+                );
+            }
+        } finally {
+            setFollowLoading(false);
+        }
+    };
+
+    // Confirmed unfollow from modal
+    const handleConfirmUnfollow = async () => {
+        if (!postAuthorId || followLoading) return;
+
+        try {
+            setFollowLoading(true);
+            setShowUnfollowModal(false);
+            setIsFollowing(false);
+
+            if (myFollowingCache) {
+                myFollowingCache.delete(postAuthorId);
+            }
+            window.dispatchEvent(
+                new CustomEvent("snapzy:follow-changed", {
+                    detail: { userId: postAuthorId, isFollowing: false },
+                })
+            );
+
+            await api.delete(`/follows/unfollow/${postAuthorId}`);
+        } catch (err) {
+            console.warn("Unfollow action failed:", err);
+            // 404 means user is already not followed
+            if (err.response?.status !== 404) {
+                setIsFollowing(true);
+                if (myFollowingCache) {
+                    myFollowingCache.add(postAuthorId);
+                }
+                window.dispatchEvent(
+                    new CustomEvent("snapzy:follow-changed", {
+                        detail: { userId: postAuthorId, isFollowing: true },
+                    })
+                );
+            }
+        } finally {
+            setFollowLoading(false);
         }
     };
 
@@ -226,15 +516,31 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-3 min-w-0">
+                        {/* Profile Picture */}
                         <img
                             src={authorAvatar}
                             alt={authorUsername}
-                            className="w-10 h-10 rounded-full object-cover shrink-0 ring-1 ring-gray-200"
+                            onClick={handleOpenProfile}
+                            className="w-10 h-10 rounded-full object-cover shrink-0 ring-1 ring-gray-200 cursor-pointer hover:opacity-85 transition-opacity"
+                            role="button"
+                            tabIndex={0}
+                            title={`View ${authorUsername}'s profile`}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                    handleOpenProfile(e);
+                                }
+                            }}
                         />
                         <div className="min-w-0">
-                            <p className="font-semibold text-sm text-gray-900 truncate">
+                            {/* Username */}
+                            <button
+                                type="button"
+                                onClick={handleOpenProfile}
+                                className="font-semibold text-sm text-gray-900 truncate hover:underline text-left block cursor-pointer"
+                                title={`View ${authorUsername}'s profile`}
+                            >
                                 {authorUsername}
-                            </p>
+                            </button>
                             <div className="flex items-center gap-1.5 text-xs text-gray-500">
                                 <span>{formatTimeAgo(post.createdAt)}</span>
                                 {post.location && (
@@ -251,16 +557,30 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                        {/* Follow Button (hidden on user's own post) */}
-                        {!isOwnPost && (
+                        {/* Follow / Following Button (hidden on user's own post) */}
+                        {!isOwnPost && postAuthorId && (
                             <button
-                                onClick={handleFollowToggle}
-                                className={`px-4 py-1.5 text-xs font-semibold rounded-full transition ${isFollowing
-                                    ? "bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200"
-                                    : "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
-                                    }`}
+                                type="button"
+                                onClick={handleFollowButtonClick}
+                                disabled={followLoading}
+                                className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer select-none active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed ${
+                                    isFollowing
+                                        ? "bg-gray-100 text-gray-800 hover:bg-gray-200 hover:text-red-600 border border-gray-200"
+                                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
+                                }`}
+                                title={isFollowing ? "Click to unfollow" : "Click to follow"}
+                                aria-label={isFollowing ? `Following ${authorUsername}` : `Follow ${authorUsername}`}
                             >
-                                {isFollowing ? "Following" : "Follow"}
+                                {followLoading ? (
+                                    <span className="inline-flex items-center gap-1.5">
+                                        <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                        <span>{isFollowing ? "Following" : "Follow"}</span>
+                                    </span>
+                                ) : isFollowing ? (
+                                    "Following"
+                                ) : (
+                                    "Follow"
+                                )}
                             </button>
                         )}
 
@@ -315,7 +635,7 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                             alt={post.caption || "Post content"}
                             className="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.01]"
                             loading="lazy"
-                        />
+                        ></img>
                     ) : (
                         <div className="text-gray-400 text-sm">No image available</div>
                     )}
@@ -378,9 +698,12 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
 
                     {/* Bookmark / Save Button */}
                     <button
+                        type="button"
                         onClick={handleSave}
-                        className="hover:scale-110 active:scale-95 transition-transform"
+                        disabled={saveLoading}
+                        className="hover:scale-110 active:scale-95 transition-transform cursor-pointer disabled:opacity-60"
                         aria-label={saved ? "Unsave post" : "Save post"}
+                        title={saved ? "Saved" : "Save post"}
                     >
                         <Bookmark
                             size={24}
@@ -394,9 +717,14 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                     {/* Caption */}
                     {post.caption && (
                         <p className="text-sm text-gray-800 leading-5 break-words">
-                            <span className="font-semibold text-gray-900 mr-2">
+                            <button
+                                type="button"
+                                onClick={handleOpenProfile}
+                                className="font-semibold text-gray-900 mr-2 hover:underline cursor-pointer inline"
+                                title={`View ${authorUsername}'s profile`}
+                            >
                                 {authorUsername}
-                            </span>
+                            </button>
                             {post.caption}
                         </p>
                     )}
@@ -436,6 +764,78 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                     )}
                 </div>
             </article>
+
+            {/* Unfollow Confirmation Modal */}
+            {showUnfollowModal &&
+                createPortal(
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+                        onClick={() => setShowUnfollowModal(false)}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="unfollow-modal-title"
+                    >
+                        <div
+                            className="w-full max-w-sm bg-white rounded-2xl p-6 shadow-2xl border border-gray-100 flex flex-col items-center text-center animate-in zoom-in-95 duration-150"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* User Avatar */}
+                            <div className="relative mb-3.5">
+                                <img
+                                    src={authorAvatar}
+                                    alt={authorUsername}
+                                    className="w-20 h-20 rounded-full object-cover ring-4 ring-gray-100 shadow-sm"
+                                />
+                            </div>
+
+                            {/* Modal Title */}
+                            <h3
+                                id="unfollow-modal-title"
+                                className="text-lg font-bold text-gray-900 mb-1.5"
+                            >
+                                Unfollow @{authorUsername}?
+                            </h3>
+
+                            {/* Confirmation Subtitle */}
+                            <p className="text-sm text-gray-500 mb-6 leading-relaxed px-1">
+                                Are you sure you want to unfollow{" "}
+                                <span className="font-semibold text-gray-800">
+                                    @{authorUsername}
+                                </span>
+                                ? You won&apos;t see their latest posts in your feed anymore.
+                            </p>
+
+                            {/* Actions */}
+                            <div className="w-full flex flex-col gap-2">
+                                <button
+                                    type="button"
+                                    onClick={handleConfirmUnfollow}
+                                    disabled={followLoading}
+                                    className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold text-sm rounded-xl shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                                >
+                                    {followLoading ? (
+                                        <>
+                                            <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                            <span>Unfollowing...</span>
+                                        </>
+                                    ) : (
+                                        "Unfollow"
+                                    )}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setShowUnfollowModal(false)}
+                                    disabled={followLoading}
+                                    className="w-full py-2.5 px-4 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 font-semibold text-sm rounded-xl transition duration-150 cursor-pointer disabled:opacity-60"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>,
+                    document.body
+                )}
 
             {/* Comments Popup Modal */}
             {showComments && (

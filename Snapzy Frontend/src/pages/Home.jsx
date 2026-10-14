@@ -12,7 +12,7 @@ function Home() {
         try {
             setLoading(true);
             const response = await api.get("/posts/feed");
-            console.log("Fetched feed posts:", response.data?.posts);
+            
             const feedPosts = response.data?.posts ?? response.data ?? [];
             setPosts(Array.isArray(feedPosts) ? feedPosts : []);
         } catch (error) {

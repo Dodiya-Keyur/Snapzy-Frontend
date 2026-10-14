@@ -592,136 +592,136 @@ function SearchPage() {
             {/* Post Detail Modal */}
             {
                 selectedPost &&
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-4 backdrop-blur-xs animate-in fade-in"
-                    onClick={() => setSelectedPost(null)}
-                >
                     <div
-                        className="relative flex flex-col w-full max-w-md sm:max-w-lg lg:max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl"
-                        onClick={(e) => e.stopPropagation()}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-4 backdrop-blur-xs animate-in fade-in"
+                        onClick={() => setSelectedPost(null)}
                     >
-                        {/* Header */}
-                        <div className="shrink-0 flex items-center justify-between border-b border-gray-100 px-4 py-3 sm:px-5 sm:py-3.5">
-                            <div
-                                onClick={() => {
-                                    const authorId = selectedPost.user?._id;
-                                    const isSelf =
-                                        authUser &&
-                                        (authUser._id === authorId ||
-                                            authUser.username === selectedPost.user?.username);
-                                    navigate(
-                                        isSelf
-                                            ? "/profile"
-                                            : `/profile/${authorId || selectedPost.user?.username}`
-                                    );
-                                    setSelectedPost(null);
-                                }}
-                                className="flex items-center gap-3 cursor-pointer group"
-                            >
-                                <img
-                                    src={
-                                        selectedPost.user?.profilePicture ||
-                                        selectedPost.user?.avatar ||
-                                        DEFAULT_AVATAR
-                                    }
-                                    alt={selectedPost.user?.username || "author"}
-                                    className="h-9 w-9 rounded-full object-cover ring-1 ring-gray-200 group-hover:ring-blue-500 transition"
-                                />
-                                <div>
-                                    <p className="text-sm font-semibold text-gray-900 leading-tight group-hover:text-blue-600 transition">
-                                        {selectedPost.user?.username || "anonymous"}
-                                    </p>
-                                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                                        <span>{formatTimeAgo(selectedPost.createdAt)}</span>
-                                        {selectedPost.location && (
-                                            <>
-                                                <span>•</span>
-                                                <span className="flex items-center gap-0.5 capitalize">
-                                                    <MapPin size={11} className="text-gray-400" />
-                                                    {selectedPost.location}
-                                                </span>
-                                            </>
-                                        )}
+                        <div
+                            className="relative flex flex-col w-full max-w-md sm:max-w-lg lg:max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Header */}
+                            <div className="shrink-0 flex items-center justify-between border-b border-gray-100 px-4 py-3 sm:px-5 sm:py-3.5">
+                                <div
+                                    onClick={() => {
+                                        const authorId = selectedPost.user?._id;
+                                        const isSelf =
+                                            authUser &&
+                                            (authUser._id === authorId ||
+                                                authUser.username === selectedPost.user?.username);
+                                        navigate(
+                                            isSelf
+                                                ? "/profile"
+                                                : `/profile/${authorId || selectedPost.user?.username}`
+                                        );
+                                        setSelectedPost(null);
+                                    }}
+                                    className="flex items-center gap-3 cursor-pointer group"
+                                >
+                                    <img
+                                        src={
+                                            selectedPost.user?.profilePicture ||
+                                            selectedPost.user?.avatar ||
+                                            DEFAULT_AVATAR
+                                        }
+                                        alt={selectedPost.user?.username || "author"}
+                                        className="h-9 w-9 rounded-full object-cover ring-1 ring-gray-200 group-hover:ring-blue-500 transition"
+                                    />
+                                    <div>
+                                        <p className="text-sm font-semibold text-gray-900 leading-tight group-hover:text-blue-600 transition">
+                                            {selectedPost.user?.username || "anonymous"}
+                                        </p>
+                                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                                            <span>{formatTimeAgo(selectedPost.createdAt)}</span>
+                                            {selectedPost.location && (
+                                                <>
+                                                    <span>•</span>
+                                                    <span className="flex items-center gap-0.5 capitalize">
+                                                        <MapPin size={11} className="text-gray-400" />
+                                                        {selectedPost.location}
+                                                    </span>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <button
-                                onClick={() => setSelectedPost(null)}
-                                className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition"
-                                aria-label="Close modal"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        {/* Image */}
-                        <div className="shrink min-h-0 max-h-[46vh] sm:max-h-[50vh] w-full bg-black flex items-center justify-center overflow-hidden">
-                            <img
-                                src={selectedPost.image || selectedPost.imageUrl}
-                                alt={selectedPost.caption || "Post preview"}
-                                className="max-h-[46vh] sm:max-h-[50vh] w-auto max-w-full object-contain"
-                            />
-                        </div>
-
-                        {/* Caption & Actions */}
-                        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
-                            <div className="flex items-center gap-6 text-sm text-gray-700">
                                 <button
-                                    type="button"
-                                    onClick={handleModalLikeToggle}
-                                    disabled={modalLikeLoading}
-                                    className="flex items-center gap-1.5 font-semibold transition hover:opacity-80 active:scale-95 cursor-pointer disabled:opacity-60"
-                                    title={modalIsLiked ? "Unlike post" : "Like post"}
+                                    onClick={() => setSelectedPost(null)}
+                                    className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition"
+                                    aria-label="Close modal"
                                 >
-                                    <Heart
-                                        size={20}
-                                        className={
-                                            modalIsLiked
-                                                ? "fill-red-500 text-red-500 scale-105 transition-transform"
-                                                : "text-gray-600 hover:text-red-500 transition-colors"
-                                        }
-                                    />
-                                    <span>
-                                        {Math.max(0, modalLikesCount).toLocaleString()} likes
-                                    </span>
+                                    <X size={20} />
                                 </button>
-                                <div className="flex items-center gap-1.5 font-semibold">
-                                    <MessageCircle size={20} className="text-gray-600" />
-                                    <span>
-                                        {Math.max(
-                                            0,
-                                            selectedPost.commentCount ?? selectedPost.comments ?? 0
-                                        ).toLocaleString()}{" "}
-                                        comments
-                                    </span>
-                                </div>
                             </div>
 
-                            {selectedPost.caption && (
-                                <p className="text-sm text-gray-800 leading-relaxed">
-                                    <span className="font-semibold text-gray-900 mr-2">
-                                        {selectedPost.user?.username || "creator"}
-                                    </span>
-                                    {selectedPost.caption}
-                                </p>
-                            )}
+                            {/* Image */}
+                            <div className="shrink min-h-0 max-h-[46vh] sm:max-h-[50vh] w-full bg-black flex items-center justify-center overflow-hidden">
+                                <img
+                                    src={selectedPost.image || selectedPost.imageUrl}
+                                    alt={selectedPost.caption || "Post preview"}
+                                    className="max-h-[46vh] sm:max-h-[50vh] w-auto max-w-full object-contain"
+                                />
+                            </div>
 
-                            {Array.isArray(selectedPost.hashtags) && selectedPost.hashtags.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5">
-                                    {selectedPost.hashtags.map((tag, idx) => (
-                                        <span
-                                            key={idx}
-                                            className="text-xs font-medium text-blue-600"
-                                        >
-                                            {tag.startsWith("#") ? tag : `#${tag}`}
+                            {/* Caption & Actions */}
+                            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
+                                <div className="flex items-center gap-6 text-sm text-gray-700">
+                                    <button
+                                        type="button"
+                                        onClick={handleModalLikeToggle}
+                                        disabled={modalLikeLoading}
+                                        className="flex items-center gap-1.5 font-semibold transition hover:opacity-80 active:scale-95 cursor-pointer disabled:opacity-60"
+                                        title={modalIsLiked ? "Unlike post" : "Like post"}
+                                    >
+                                        <Heart
+                                            size={20}
+                                            className={
+                                                modalIsLiked
+                                                    ? "fill-red-500 text-red-500 scale-105 transition-transform"
+                                                    : "text-gray-600 hover:text-red-500 transition-colors"
+                                            }
+                                        />
+                                        <span>
+                                            {Math.max(0, modalLikesCount).toLocaleString()} likes
                                         </span>
-                                    ))}
+                                    </button>
+                                    <div className="flex items-center gap-1.5 font-semibold">
+                                        <MessageCircle size={20} className="text-gray-600" />
+                                        <span>
+                                            {Math.max(
+                                                0,
+                                                selectedPost.commentCount ?? selectedPost.comments ?? 0
+                                            ).toLocaleString()}{" "}
+                                            comments
+                                        </span>
+                                    </div>
                                 </div>
-                            )}
+
+                                {selectedPost.caption && (
+                                    <p className="text-sm text-gray-800 leading-relaxed">
+                                        <span className="font-semibold text-gray-900 mr-2">
+                                            {selectedPost.user?.username || "creator"}
+                                        </span>
+                                        {selectedPost.caption}
+                                    </p>
+                                )}
+
+                                {Array.isArray(selectedPost.hashtags) && selectedPost.hashtags.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {selectedPost.hashtags.map((tag, idx) => (
+                                            <span
+                                                key={idx}
+                                                className="text-xs font-medium text-blue-600"
+                                            >
+                                                {tag.startsWith("#") ? tag : `#${tag}`}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
             }
         </div>
     );
