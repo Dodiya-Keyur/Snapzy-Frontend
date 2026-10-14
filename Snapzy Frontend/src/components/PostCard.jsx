@@ -258,10 +258,50 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
     const [copied, setCopied] = useState(false);
     const menuRef = useRef(null);
 
-    // Comments
+    // Comments & Live Count
     const [showComments, setShowComments] = useState(false);
-    const [comments, setComments] = useState(post.commentsList ?? []);
-    const [commentCount, setCommentCount] = useState(post.commentCount ?? post.comments ?? 0);
+    const initialCommentCount = Number(
+        post.commentCount ??
+        post.commentsCount ??
+        post.totalComments ??
+        (Array.isArray(post.comments) ? post.comments.length : undefined) ??
+        (typeof post.comments === "number" ? post.comments : 0)
+    ) || 0;
+    const [commentCount, setCommentCount] = useState(initialCommentCount);
+
+    // Sync count when post prop changes
+    useEffect(() => {
+        const count =
+            post.commentCount ??
+            post.commentsCount ??
+            post.totalComments ??
+            (Array.isArray(post.comments) ? post.comments.length : undefined) ??
+            (typeof post.comments === "number" ? post.comments : undefined);
+
+        if (typeof count === "number") {
+            setCommentCount(Math.max(0, count));
+        }
+    }, [post.commentCount, post.commentsCount, post.totalComments, post.comments]);
+
+    // Live sync across different cards/views when comments or replies are added or deleted
+    useEffect(() => {
+        if (!postId) return;
+
+        const handleCommentCountSync = (e) => {
+            if (e.detail?.postId && e.detail.postId.toString() === postId) {
+                if (typeof e.detail.commentCount === "number") {
+                    setCommentCount(Math.max(0, e.detail.commentCount));
+                } else if (typeof e.detail.delta === "number") {
+                    setCommentCount((prev) => Math.max(0, prev + e.detail.delta));
+                }
+            }
+        };
+
+        window.addEventListener("snapzy:comment-count-changed", handleCommentCountSync);
+        return () => {
+            window.removeEventListener("snapzy:comment-count-changed", handleCommentCountSync);
+        };
+    }, [postId]);
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -485,30 +525,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         }
     };
 
-    const handleAddComment = (text, parentId = null) => {
-        const myAvatar =
-            currentUser.profilePicture ||
-            currentUser.avatar ||
-            DEFAULT_USER.avatar;
-
-        setComments((prev) => [
-            ...prev,
-            {
-                id: Date.now(),
-                parentId,
-                username: currentUser.username || "me",
-                avatar: myAvatar,
-                text,
-                createdAt: "Just now",
-            },
-        ]);
-        setCommentCount((prev) => prev + 1);
-    };
-
-    const handleDeleteComment = (id) => {
-        setComments((prev) => prev.filter((c) => c.id !== id && c.parentId !== id));
-        setCommentCount((prev) => Math.max(0, prev - 1));
-    };
 
     return (
         <>
@@ -563,11 +579,10 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                                 type="button"
                                 onClick={handleFollowButtonClick}
                                 disabled={followLoading}
-                                className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer select-none active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed ${
-                                    isFollowing
-                                        ? "bg-gray-100 text-gray-800 hover:bg-gray-200 hover:text-red-600 border border-gray-200"
-                                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
-                                }`}
+                                className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer select-none active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed ${isFollowing
+                                    ? "bg-gray-100 text-gray-800 hover:bg-gray-200 hover:text-red-600 border border-gray-200"
+                                    : "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
+                                    }`}
                                 title={isFollowing ? "Click to unfollow" : "Click to follow"}
                                 aria-label={isFollowing ? `Following ${authorUsername}` : `Follow ${authorUsername}`}
                             >
@@ -850,7 +865,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                         },
                         image: postImage,
                     }}
-                    comments={comments}
                     currentUser={{
                         ...currentUser,
                         avatar:
@@ -858,9 +872,9 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                             currentUser.avatar ||
                             DEFAULT_USER.avatar,
                     }}
+                    commentCount={commentCount}
+                    onCommentCountChange={setCommentCount}
                     onClose={() => setShowComments(false)}
-                    onAddComment={handleAddComment}
-                    onDeleteComment={handleDeleteComment}
                 />
             )}
         </>
