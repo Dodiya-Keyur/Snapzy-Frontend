@@ -269,7 +269,7 @@ function ActivityPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#f8fafc] px-4 py-8 lg:px-8 mt-[-30px] md:mt-1">
       <div className="mx-auto w-full max-w-6xl">
 
         {/* Header */}

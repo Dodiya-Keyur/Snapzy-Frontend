@@ -580,8 +580,8 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                                 onClick={handleFollowButtonClick}
                                 disabled={followLoading}
                                 className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer select-none active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed ${isFollowing
-                                    ? "bg-gray-100 text-gray-800 hover:bg-gray-200 hover:text-red-600 border border-gray-200"
-                                    : "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
+                                        ? "bg-gray-100 text-gray-800 hover:bg-gray-200 hover:text-red-600 border border-gray-200"
+                                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
                                     }`}
                                 title={isFollowing ? "Click to unfollow" : "Click to follow"}
                                 aria-label={isFollowing ? `Following ${authorUsername}` : `Follow ${authorUsername}`}

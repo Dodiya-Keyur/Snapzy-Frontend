@@ -256,7 +256,7 @@ function NotificationPage() {
     };
 
     return (
-        <div className="min-h-screen bg-white text-zinc-900">
+        <div className="min-h-screen bg-white text-zinc-900 mt-[-25px] md:mt-0">
             <div className="mx-auto max-w-2xl sm:px-6 sm:py-8">
                 <div className="overflow-hidden bg-white sm:rounded-2xl sm:border sm:border-zinc-200 sm:shadow-sm">
 

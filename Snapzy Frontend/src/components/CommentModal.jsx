@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Link } from "react-router-dom";
 import { X, Heart, Loader2, Trash2 } from "lucide-react";
 import { formatTimeAgo } from "../utils/formatTime";
 import api from "../api/axios";
@@ -492,9 +493,13 @@ const CommentModal = ({
                                 className="w-8 h-8 rounded-full object-cover ring-1 ring-gray-200"
                             />
                             <div className="min-w-0">
-                                <p className="text-sm font-semibold text-gray-900 truncate">
-                                    {post.user?.username || "user"}
-                                </p>
+
+                                <Link to={`/profile/${post.user?._id || post.user?._id}`} className="cursor-pointer">
+                                    <p className="text-sm font-semibold text-gray-900 truncate">
+                                        {post.user?.username || "user"}
+                                    </p>
+                                </Link>
+
                                 {post.location && (
                                     <p className="text-xs text-gray-500 truncate capitalize">
                                         {post.location}

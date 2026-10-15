@@ -46,7 +46,7 @@ function LikedPost() {
       } else {
         setError(
           err.response?.data?.message ||
-            "Unable to load liked posts. Please try again."
+          "Unable to load liked posts. Please try again."
         );
       }
     } finally {
@@ -93,7 +93,7 @@ function LikedPost() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8 mt-[-25px] md:mt-0">
       <div className="mx-auto max-w-5xl">
 
         {/* Page Header */}

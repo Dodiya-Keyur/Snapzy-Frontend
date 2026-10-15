@@ -386,14 +386,17 @@ function ProfilePage() {
                             </div>
 
                             {/* 4. Bio */}
+
                             {bio ? (
                                 <p className="whitespace-pre-line text-sm leading-relaxed text-gray-700 max-w-lg pt-0.5">
                                     {bio}
                                 </p>
                             ) : (
-                                <p className="text-xs text-gray-400 italic pt-0.5">
+
+                                isOwnProfile && <p className="text-xs text-gray-400 italic pt-0.5">
                                     No bio yet. Tap "Edit Profile" to tell people about yourself.
                                 </p>
+
                             )}
 
                             {/* 5. Action Buttons: Edit Profile or Follow/Following */}
@@ -410,8 +413,8 @@ function ProfilePage() {
                                         onClick={handleFollowToggle}
                                         disabled={followLoading}
                                         className={`rounded-xl px-6 py-2 text-sm font-semibold transition active:scale-95 shadow-xs ${isFollowing
-                                                ? "bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200"
-                                                : "bg-blue-600 text-white hover:bg-blue-700"
+                                            ? "bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200"
+                                            : "bg-blue-600 text-white hover:bg-blue-700"
                                             }`}
                                     >
                                         {isFollowing ? "Following" : "Follow"}
@@ -436,36 +439,48 @@ function ProfilePage() {
                                 alt={username}
                                 className="h-20 w-20 rounded-full object-cover ring-2 ring-gray-100 shadow-sm shrink-0"
                             />
-                            <div className="flex-1 flex justify-around items-center text-center">
-                                <div>
-                                    <p className="text-base font-bold text-gray-900">{posts.length}</p>
-                                    <p className="text-xs text-gray-500">posts</p>
+                            <div className="flex-1 flex flex-col items-start gap-4">
+
+                                {/* Username and Full Name in one row */}
+                                <div className="flex flex-col items-start gap-1 ml-5">
+                                    <h1 className="text-base font-bold text-gray-900">
+                                        {username}
+                                    </h1>
+
+                                    {fullName && (
+                                        <h2 className="text-sm font-semibold text-gray-800">
+                                            {fullName}
+                                        </h2>
+                                    )}
                                 </div>
-                                <div>
-                                    <p className="text-base font-bold text-gray-900">{followersCount}</p>
-                                    <p className="text-xs text-gray-500">followers</p>
+
+                                {/* Posts, Followers, Following in columns */}
+                                <div className="w-full flex justify-around items-center text-center">
+                                    <div>
+                                        <p className="text-base font-bold text-gray-900">
+                                            {posts.length}
+                                        </p>
+                                        <p className="text-xs text-gray-500">posts</p>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-base font-bold text-gray-900">
+                                            {followersCount}
+                                        </p>
+                                        <p className="text-xs text-gray-500">followers</p>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-base font-bold text-gray-900">
+                                            {followingCount}
+                                        </p>
+                                        <p className="text-xs text-gray-500">following</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-base font-bold text-gray-900">{followingCount}</p>
-                                    <p className="text-xs text-gray-500">following</p>
-                                </div>
+
                             </div>
                         </div>
-
-                        {/* Details: Username first, then Name, then Bio */}
                         <div className="space-y-1">
-                            {/* 1. Username */}
-                            <h1 className="text-base font-bold text-gray-900">
-                                {username}
-                            </h1>
-
-                            {/* 2. Full Name */}
-                            {fullName && (
-                                <h2 className="text-sm font-semibold text-gray-800">
-                                    {fullName}
-                                </h2>
-                            )}
-
                             {/* 3. Bio */}
                             {bio ? (
                                 <p className="whitespace-pre-line text-sm text-gray-700 leading-snug pt-0.5">
@@ -492,8 +507,8 @@ function ProfilePage() {
                                     onClick={handleFollowToggle}
                                     disabled={followLoading}
                                     className={`flex-1 rounded-xl active:scale-95 py-2 px-3 text-xs font-semibold transition text-center ${isFollowing
-                                            ? "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-200"
-                                            : "bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
+                                        ? "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-200"
+                                        : "bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
                                         }`}
                                 >
                                     {isFollowing ? "Following" : "Follow"}
