@@ -19,6 +19,7 @@ import {
     Sparkles,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useNotification } from "../context/NotificationContext";
 import api from "../api/axios";
 
 function MobileHeader() {
@@ -26,6 +27,7 @@ function MobileHeader() {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, setUser } = useAuth();
+    const { unreadCount, hasUnread } = useNotification();
 
     // Close menu when route changes
     useEffect(() => {
@@ -113,7 +115,7 @@ function MobileHeader() {
                         icon: Bell,
                         iconColor: "text-purple-500",
                         bgColor: "bg-purple-50",
-                        badge: "Updates",
+                        badge: unreadCount > 0 ? `${unreadCount} new` : null,
                     },
                 ],
             },
@@ -147,7 +149,7 @@ function MobileHeader() {
                 ],
             },
         ],
-        []
+        [unreadCount]
     );
 
     const username = user?.username || user?.name || "Keyur";
@@ -193,8 +195,10 @@ function MobileHeader() {
                                 strokeWidth={2}
                                 className="text-gray-900"
                             />
-                            {/* Notification Badge */}
-                            <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500" />
+                            {/* Notification Badge - Red Dot */}
+                            {hasUnread && (
+                                <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500 animate-pulse" />
+                            )}
                         </NavLink>
 
                         {/* 3 Horizontal Lines (Hamburger Menu Button) */}

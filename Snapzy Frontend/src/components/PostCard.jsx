@@ -229,9 +229,18 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         };
     }, [showUnfollowModal]);
 
-    // Fetch initial isLiked and verified likesCount from backend
+    // Fetch initial isLiked and verified likesCount from backend (only if not already provided)
     useEffect(() => {
         if (!post?._id) return;
+
+        if (typeof post.isLiked === "boolean") {
+            setLiked(post.isLiked);
+            if (typeof post.likesCount === "number") {
+                setLikesCount(Math.max(0, post.likesCount));
+            }
+            return;
+        }
+
         let isMounted = true;
         api.get(`/posts/${post._id}/isliked`)
             .then((res) => {
@@ -250,7 +259,7 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         return () => {
             isMounted = false;
         };
-    }, [post?._id]);
+    }, [post?._id, post.isLiked, post.likesCount]);
 
     // Micro-interactions
     const [showHeartBurst, setShowHeartBurst] = useState(false);

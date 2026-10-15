@@ -16,6 +16,7 @@ import {
     Camera,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useNotification } from "../context/NotificationContext";
 import api from "../api/axios";
 
 const Sidebar = () => {
@@ -24,6 +25,7 @@ const Sidebar = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { setUser } = useAuth();
+    const { unreadCount, hasUnread } = useNotification();
 
     // Close More menu when route changes
     useEffect(() => {
@@ -153,7 +155,7 @@ const Sidebar = () => {
                                 <NavLink
                                     to={item.path}
                                     className={({ isActive }) =>
-                                        `group flex items-center gap-4 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${isActive
+                                        `group flex items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${isActive
                                             ? "bg-white text-gray-900 font-semibold shadow-xs"
                                             : "text-gray-600 hover:bg-gray-200/60 hover:text-gray-900"
                                         }`
@@ -161,14 +163,27 @@ const Sidebar = () => {
                                 >
                                     {({ isActive }) => (
                                         <>
-                                            <Icon
-                                                size={22}
-                                                strokeWidth={isActive ? 2.5 : 2}
-                                                className="transition-transform duration-200 group-hover:scale-105"
-                                            />
-                                            <span>
-                                                {item.name}
-                                            </span>
+                                            <div className="flex items-center gap-4">
+                                                <div className="relative flex items-center justify-center">
+                                                    <Icon
+                                                        size={22}
+                                                        strokeWidth={isActive ? 2.5 : 2}
+                                                        className="transition-transform duration-200 group-hover:scale-105"
+                                                    />
+                                                    {item.name === "Notifications" && hasUnread && (
+                                                        <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500 animate-pulse" />
+                                                    )}
+                                                </div>
+                                                <span>
+                                                    {item.name}
+                                                </span>
+                                            </div>
+
+                                            {item.name === "Notifications" && unreadCount > 0 && (
+                                                <span className="rounded-full bg-sky-500/10 px-2 py-0.5 text-xs font-semibold text-sky-600">
+                                                    {unreadCount > 99 ? "99+" : unreadCount}
+                                                </span>
+                                            )}
                                         </>
                                     )}
                                 </NavLink>
