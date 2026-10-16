@@ -230,15 +230,19 @@ function ActivityPage() {
           });
         }
       } catch (backendErr) {
-        // Fallback: If activities route is not reachable, query likes & saved posts
+        // Fallback: Query all individual endpoints (likes, saved, comments, follows)
         console.warn("Unified activities API failed, falling back to individual routes:", backendErr);
-        const [likesRes, savedRes] = await Promise.allSettled([
+        const [likesRes, savedRes, commentsRes, followingRes] = await Promise.allSettled([
           api.get("/users/me/liked-post"),
           api.get("/users/me/saved-posts"),
+          api.get("/comments/me"),
+          api.get("/users/me/following"),
         ]);
 
         const fallbackItems = [];
+        const missingUserIds = new Set();
 
+        // 1. Likes
         if (likesRes.status === "fulfilled") {
           const rawLikes =
             likesRes.value.data?.likedPost ||
@@ -248,6 +252,12 @@ function ActivityPage() {
           rawLikes.forEach((item) => {
             const p = item.post || item;
             if (p) {
+              const u = p.user;
+              const hasObjUser = u && typeof u === "object" && (u.username || u.name);
+              const authorId = typeof u === "object" ? (u._id || u.id) : (typeof u === "string" ? u : null);
+              if (!hasObjUser && authorId) {
+                missingUserIds.add(authorId.toString());
+              }
               fallbackItems.push({
                 id: `like_${item._id || p._id}`,
                 type: "like",
@@ -255,14 +265,15 @@ function ActivityPage() {
                 postId: p._id,
                 postImage: p.image?.url || p.image || p.imageUrl,
                 caption: p.caption || "",
-                username: p.user?.username || "creator",
-                avatar: p.user?.profilePicture || DEFAULT_AVATAR,
-                userId: p.user?._id || p.user,
+                username: hasObjUser ? (u.username || u.name) : "",
+                avatar: hasObjUser ? (u.profilePicture || DEFAULT_AVATAR) : DEFAULT_AVATAR,
+                userId: authorId,
               });
             }
           });
         }
 
+        // 2. Saved Posts
         if (savedRes.status === "fulfilled") {
           const rawSaved =
             savedRes.value.data?.savedPosts ||
@@ -270,6 +281,12 @@ function ActivityPage() {
             [];
           rawSaved.forEach((p) => {
             if (p) {
+              const u = p.user;
+              const hasObjUser = u && typeof u === "object" && (u.username || u.name);
+              const authorId = typeof u === "object" ? (u._id || u.id) : (typeof u === "string" ? u : null);
+              if (!hasObjUser && authorId) {
+                missingUserIds.add(authorId.toString());
+              }
               fallbackItems.push({
                 id: `save_${p._id}`,
                 type: "save",
@@ -277,12 +294,94 @@ function ActivityPage() {
                 postId: p._id,
                 postImage: p.image?.url || p.image || p.imageUrl,
                 caption: p.caption || "",
-                username: p.user?.username || "creator",
-                avatar: p.user?.profilePicture || DEFAULT_AVATAR,
-                userId: p.user?._id || p.user,
+                username: hasObjUser ? (u.username || u.name) : "",
+                avatar: hasObjUser ? (u.profilePicture || DEFAULT_AVATAR) : DEFAULT_AVATAR,
+                userId: authorId,
               });
             }
           });
+        }
+
+        // 3. Comments
+        if (commentsRes.status === "fulfilled") {
+          const rawComments =
+            commentsRes.value.data?.comments ||
+            commentsRes.value.data?.data ||
+            [];
+          rawComments.forEach((c) => {
+            const p = c.post;
+            const u = p?.user;
+            const hasObjUser = u && typeof u === "object" && (u.username || u.name);
+            const authorId = typeof u === "object" ? (u._id || u.id) : (typeof u === "string" ? u : null);
+            if (!hasObjUser && authorId) {
+              missingUserIds.add(authorId.toString());
+            }
+            fallbackItems.push({
+              id: `comment_${c._id}`,
+              type: "comment",
+              createdAt: c.createdAt,
+              postId: p?._id,
+              postImage: p?.image?.url || p?.image || p?.imageUrl,
+              caption: p?.caption || "",
+              commentText: c.commentText,
+              username: hasObjUser ? (u.username || u.name) : "",
+              avatar: hasObjUser ? (u.profilePicture || DEFAULT_AVATAR) : DEFAULT_AVATAR,
+              userId: authorId,
+            });
+          });
+        }
+
+        // 4. Following
+        if (followingRes.status === "fulfilled") {
+          const rawFollowing =
+            followingRes.value.data?.following ||
+            followingRes.value.data?.data ||
+            [];
+          rawFollowing.forEach((f) => {
+            const followed = f.following || f;
+            if (followed) {
+              const u = followed;
+              fallbackItems.push({
+                id: `follow_${f._id || u._id}`,
+                type: "follow",
+                createdAt: f.createdAt || new Date().toISOString(),
+                username: u.username || u.name || "user",
+                avatar: u.profilePicture || DEFAULT_AVATAR,
+                caption: u.name || (u.username ? `@${u.username}` : ""),
+                userId: u._id || u.id,
+              });
+            }
+          });
+        }
+
+        // Fetch any missing author usernames in parallel
+        if (missingUserIds.size > 0) {
+          try {
+            const userProfiles = await Promise.allSettled(
+              Array.from(missingUserIds).map((uid) => api.get(`/users/${uid}`))
+            );
+            const resolvedUsers = {};
+            userProfiles.forEach((res) => {
+              if (res.status === "fulfilled") {
+                const u = res.value.data?.User || res.value.data?.user || res.value.data;
+                if (u && (u._id || u.id)) {
+                  resolvedUsers[(u._id || u.id).toString()] = u;
+                }
+              }
+            });
+
+            fallbackItems.forEach((item) => {
+              if ((!item.username || item.username === "creator") && item.userId) {
+                const found = resolvedUsers[item.userId.toString()];
+                if (found) {
+                  item.username = found.username || found.name || "user";
+                  if (found.profilePicture) item.avatar = found.profilePicture;
+                }
+              }
+            });
+          } catch {
+            // Ignore error
+          }
         }
 
         fallbackItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -290,9 +389,9 @@ function ActivityPage() {
         setStats({
           all: fallbackItems.length,
           like: fallbackItems.filter((a) => a.type === "like").length,
-          comment: 0,
+          comment: fallbackItems.filter((a) => a.type === "comment").length,
           save: fallbackItems.filter((a) => a.type === "save").length,
-          follow: 0,
+          follow: fallbackItems.filter((a) => a.type === "follow").length,
         });
       }
     } catch (err) {
@@ -558,7 +657,7 @@ function ActivityPage() {
                                   }}
                                   className="font-bold text-gray-900 hover:text-blue-600 hover:underline"
                                 >
-                                  @{activity.username}
+                                  @{activity.username && activity.username !== "creator" ? activity.username : (activity.name || "user")}
                                 </button>
                               </p>
 
@@ -668,7 +767,7 @@ function ActivityPage() {
                     }}
                     className="text-xs font-bold text-gray-900 hover:text-blue-600 sm:text-sm"
                   >
-                    @{selectedPost.username}
+                    @{selectedPost.username && selectedPost.username !== "creator" ? selectedPost.username : (selectedPost.name || "user")}
                   </button>
                   <p className="text-[11px] text-gray-400">
                     {formatTimeAgo(selectedPost.createdAt)}
@@ -715,7 +814,7 @@ function ActivityPage() {
               {selectedPost.caption && (
                 <p className="text-xs text-gray-700 sm:text-sm line-clamp-3">
                   <span className="font-semibold text-gray-900">
-                    @{selectedPost.username}:{" "}
+                    @{selectedPost.username && selectedPost.username !== "creator" ? selectedPost.username : (selectedPost.name || "user")}:{" "}
                   </span>
                   {selectedPost.caption}
                 </p>
