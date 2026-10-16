@@ -2,6 +2,7 @@ import { Home, Search, PlusSquare, Heart, User } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 function BottomNav() {
+
     const navItems = [
         {
             name: "Home",

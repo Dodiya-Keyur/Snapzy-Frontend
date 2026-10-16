@@ -124,7 +124,7 @@ function ChangePassword() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8 mt-[-20px] md:mt-0">
+    <div className="min-h-screen bg-gray-50 px-3.5 py-4 sm:px-6 sm:py-6 pb-28 md:pb-12">
       <div className="mx-auto max-w-2xl">
 
         {/* Back Link & Header */}

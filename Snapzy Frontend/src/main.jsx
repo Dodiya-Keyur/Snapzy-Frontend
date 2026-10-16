@@ -31,6 +31,8 @@ import ActivityPage from "./pages/ActivityPage.jsx";
 import SavedPost from "./pages/SavedPost.jsx";
 import LikedPost from "./pages/LikedPost.jsx";
 import SettingPage from "./pages/SettingPage.jsx";
+import ChangePassword from "./pages/ChangePassword.jsx";
+import AccountInformation from "./pages/AccountInformation.jsx";
 import EditPost from "./pages/EditPost.jsx";
 import PageNotFound from "./pages/PageNotFound.jsx";
 
@@ -103,6 +105,22 @@ const router = createBrowserRouter([
           {
             path: "setting",
             element: <SettingPage />,
+          },
+          {
+            path: "setting/change-password",
+            element: <ChangePassword />,
+          },
+          {
+            path: "change-password",
+            element: <ChangePassword />,
+          },
+          {
+            path: "setting/account-info",
+            element: <AccountInformation />,
+          },
+          {
+            path: "account-info",
+            element: <AccountInformation />,
           },
         ],
       },
