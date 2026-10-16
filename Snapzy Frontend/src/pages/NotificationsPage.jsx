@@ -522,12 +522,13 @@ function NotificationsPage() {
 
                         {/* Tabs Navigation */}
                         <nav
-                            className="flex gap-1.5 overflow-x-auto px-4 pb-3 sm:px-6 no-scrollbar"
+                            className="flex overflow-x-auto px-4 pb-3 sm:px-6 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                             aria-label="Notification categories"
                         >
                             {tabs.map((tab) => {
                                 const active = activeTab === tab.key;
-                                return (
+                                return (    
                                     <button
                                         key={tab.key}
                                         type="button"
