@@ -195,8 +195,9 @@ function SearchPage() {
                 res = await api.get(`/search?q=${encoded}`);
             } catch (err) {
                 if (err.response?.status === 404) {
+                    const fallbackRoot = (import.meta.env.VITE_API_URL || "http://localhost:3000/api").replace(/\/api\/?$/, "");
                     res = await api.get(`/search?q=${encoded}`, {
-                        baseURL: "http://localhost:3000",
+                        baseURL: fallbackRoot,
                     });
                 } else {
                     throw err;
