@@ -21,7 +21,7 @@ A modern, high-performance social media frontend web application built with **Re
 
 ### 🏠 Home Feed
 
-![Home](./src/ScreenShots/HomePage.png)
+![Home](./Snapzy%20Frontend/src/ScreenShots/HomePage.png)
 
 The Home Feed delivers a clean, responsive feed displaying posts from creators. Users can like posts with instant counter feedback, open interactive comment modals, bookmark posts, follow creators directly from the feed, and explore suggested accounts from the right sidebar.
 
@@ -29,7 +29,7 @@ The Home Feed delivers a clean, responsive feed displaying posts from creators. 
 
 ### ➕ Create Post
 
-![Create Post](./src/ScreenShots/CreatePost.png)
+![Create Post](./Snapzy%20Frontend/src/ScreenShots/CreatePost.png)
 
 The Create Post page provides a streamlined workflow to upload photos (with instant image preview and size validation up to 5 MB), compose captions with real-time character counters, attach location geotags, add hashtags, and publish posts instantly.
 
@@ -37,7 +37,7 @@ The Create Post page provides a streamlined workflow to upload photos (with inst
 
 ### 🔍 Search & Explore
 
-![Search](./src/ScreenShots/SearchPage.png)
+![Search](./Snapzy%20Frontend/src/ScreenShots/SearchPage.png)
 
 The Search & Explore page enables instant, real-time discovery of user accounts and community posts. Users can filter results across all categories, follow/unfollow creators with one click, and preview post grids with hover statistics.
 
@@ -45,7 +45,7 @@ The Search & Explore page enables instant, real-time discovery of user accounts 
 
 ### ⚡ Activity Hub
 
-![Activity](./src/ScreenShots/ActivityPage.png)
+![Activity](./Snapzy%20Frontend/src/ScreenShots/ActivityPage.png)
 
 The Activity page organizes personal engagement in a chronological timeline. Users can review likes, comments, saved posts, and follows with color-coded badge indicators, smart date grouping (Today, Yesterday, This week, Earlier), and flexible sorting options.
 
@@ -53,7 +53,7 @@ The Activity page organizes personal engagement in a chronological timeline. Use
 
 ### 👤 Profile
 
-![Profile](./src/ScreenShots/ProfilePage.png)
+![Profile](./Snapzy%20Frontend/src/ScreenShots/ProfilePage.png)
 
 The Profile page showcases user details including avatar, bio, follower/following counts, and post counts. Creators can edit their profile information, share their profile link, manage uploaded posts (edit and delete), and explore their personalized post grid.
 
