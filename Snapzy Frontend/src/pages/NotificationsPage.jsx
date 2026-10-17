@@ -17,7 +17,6 @@ import {
 import api from "../api/axios";
 import { useNotification } from "../context/NotificationContext";
 
-// Fallback images
 const DEFAULT_AVATAR =
     "https://i.pinimg.com/474x/64/99/f8/6499f89b3bd815780d60f2cbc210b2bd.jpg";
 
@@ -66,7 +65,6 @@ const emptyMessages = {
     },
 };
 
-// Formats relative time (e.g. 2m, 1h, 3d, 1w)
 function formatTimeAgo(dateInput) {
     if (!dateInput) return "";
     const date = new Date(dateInput);
@@ -174,7 +172,6 @@ function NotificationsPage() {
     const menuRef = useRef(null);
     const toastTimerRef = useRef(null);
 
-    // Show temporary feedback toast
     const showToast = useCallback((msg) => {
         if (toastTimerRef.current) {
             clearTimeout(toastTimerRef.current);
@@ -185,7 +182,6 @@ function NotificationsPage() {
         }, 3000);
     }, []);
 
-    // Close dropdown menu when clicking outside or pressing Escape
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -208,7 +204,6 @@ function NotificationsPage() {
         };
     }, []);
 
-    // Fetch user following list to initialize follow states
     const fetchFollowingList = useCallback(async () => {
         try {
             const res = await api.get("/users/me/following");
@@ -220,11 +215,9 @@ function NotificationsPage() {
             );
             setFollowingIds(ids);
         } catch {
-            // Silently ignore if following list cannot be loaded
         }
     }, []);
 
-    // Fetch all notifications from backend and auto-mark as read on page open
     const fetchNotifications = useCallback(
         async (isRefresh = false) => {
             try {
@@ -241,7 +234,6 @@ function NotificationsPage() {
 
                 const unreadCountInDb = safeItems.filter((n) => !n.isRead).length;
 
-                // When user opens the page, auto-mark all notifications as read
                 if (unreadCountInDb > 0) {
                     try {
                         await api.patch("/noti/notifications/read-all");
@@ -249,12 +241,10 @@ function NotificationsPage() {
                         window.dispatchEvent(
                             new CustomEvent("snapzy:notifications-changed")
                         );
-                        // Mark all as read in UI state as well
                         setNotifications(
                             safeItems.map((item) => ({ ...item, isRead: true }))
                         );
                     } catch {
-                        // Fallback: still show items
                         setNotifications(safeItems);
                         setUnreadCount(unreadCountInDb);
                     }
@@ -276,13 +266,11 @@ function NotificationsPage() {
         [setUnreadCount]
     );
 
-    // Initial load
     useEffect(() => {
         fetchNotifications();
         fetchFollowingList();
     }, [fetchNotifications, fetchFollowingList]);
 
-    // Listen to follow events from other components (PostCard, SearchPage, etc.)
     useEffect(() => {
         const handleFollowChanged = (e) => {
             const { userId, isFollowing } = e.detail || {};
@@ -305,10 +293,8 @@ function NotificationsPage() {
         };
     }, []);
 
-    // Computed unread count from current list
     const unreadCount = notifications.filter((item) => !item.isRead).length;
 
-    // Filter notifications according to active tab
     const filteredNotifications = notifications.filter((item) => {
         if (activeTab === "unread") return !item.isRead;
         if (activeTab === "like") return item.type === "like";
@@ -319,7 +305,6 @@ function NotificationsPage() {
         return true;
     });
 
-    // Mark all notifications as read manually
     const handleMarkAllAsRead = async () => {
         if (unreadCount === 0 || actionLoading) return;
 
@@ -337,7 +322,6 @@ function NotificationsPage() {
         }
     };
 
-    // Delete single notification
     const handleDeleteNotification = async (id, e) => {
         if (e) e.stopPropagation();
         setOpenMenuId(null);
@@ -345,7 +329,6 @@ function NotificationsPage() {
         const target = notifications.find((n) => n._id === id);
         const wasUnread = target && !target.isRead;
 
-        // Optimistic removal
         setNotifications((prev) => prev.filter((n) => n._id !== id));
 
         try {
@@ -357,7 +340,6 @@ function NotificationsPage() {
         }
     };
 
-    // Delete all notifications
     const handleDeleteAll = async () => {
         setShowDeleteAllModal(false);
         if (notifications.length === 0 || actionLoading) return;
@@ -375,14 +357,12 @@ function NotificationsPage() {
         }
     };
 
-    // Follow / Unfollow user
     const handleToggleFollow = async (userId, e) => {
         if (e) e.stopPropagation();
         if (!userId || followLoadingIds.has(userId)) return;
 
         const isCurrentlyFollowing = followingIds.has(userId);
 
-        // Optimistic update
         setFollowingIds((prev) => {
             const next = new Set(prev);
             if (isCurrentlyFollowing) {
@@ -409,7 +389,6 @@ function NotificationsPage() {
             }
         } catch (err) {
             console.warn("Follow action error:", err);
-            // Revert state on error
             setFollowingIds((prev) => {
                 const next = new Set(prev);
                 if (isCurrentlyFollowing) {
@@ -433,14 +412,12 @@ function NotificationsPage() {
         }
     };
 
-    // Clicking notification row navigates to relevant profile
     const handleRowClick = (item) => {
         if (item.sender?._id) {
             navigate(`/profile/${item.sender._id}`);
         }
     };
 
-    // Action text generator
     const getActionText = (item) => {
         switch (item.type) {
             case "like":
@@ -459,9 +436,7 @@ function NotificationsPage() {
     return (
         <div className="min-h-[calc(100vh-5rem)] bg-neutral-50/60 pb-16 pt-2 md:py-6">
             <div className="mx-auto max-w-2xl px-3 sm:px-6">
-                {/* Main Card Container without overflow-hidden so popups are never clipped */}
                 <div className="rounded-2xl border border-zinc-200/90 bg-white shadow-xs">
-                    {/* Header */}
                     <header className="sticky top-0 z-20 rounded-t-2xl border-b border-zinc-100 bg-white/95 backdrop-blur-md">
                         <div className="flex items-center justify-between gap-2 px-4 pb-3 pt-4 sm:px-6">
                             <div className="flex items-center gap-2.5">
@@ -476,9 +451,7 @@ function NotificationsPage() {
                                 )}
                             </div>
 
-                            {/* Header Actions */}
                             <div className="flex items-center gap-1 sm:gap-1.5">
-                                {/* Refresh button */}
                                 <button
                                     type="button"
                                     onClick={() => fetchNotifications(true)}
@@ -493,7 +466,6 @@ function NotificationsPage() {
                                     />
                                 </button>
 
-                                {/* Delete all / Clear all button */}
                                 <button
                                     type="button"
                                     onClick={() => setShowDeleteAllModal(true)}
@@ -505,7 +477,6 @@ function NotificationsPage() {
                                     <Trash2 size={17} />
                                 </button>
 
-                                {/* Mark all as read button */}
                                 <button
                                     type="button"
                                     onClick={handleMarkAllAsRead}
@@ -520,7 +491,6 @@ function NotificationsPage() {
                             </div>
                         </div>
 
-                        {/* Tabs Navigation */}
                         <nav
                             className="flex overflow-x-auto px-4 pb-3 sm:px-6 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -558,7 +528,6 @@ function NotificationsPage() {
                         </nav>
                     </header>
 
-                    {/* Content Section */}
                     {loading ? (
                         <NotificationSkeleton />
                     ) : error ? (
@@ -584,7 +553,6 @@ function NotificationsPage() {
                         <EmptyState tab={activeTab} />
                     ) : (
                         <div>
-                            {/* Section header */}
                             <div className="flex items-center justify-between bg-zinc-50/75 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 sm:px-6">
                                 <span>Recent activity</span>
                                 <span className="font-normal text-zinc-400">
@@ -595,7 +563,6 @@ function NotificationsPage() {
                                 </span>
                             </div>
 
-                            {/* Notification Rows */}
                             <div className="divide-y divide-zinc-100">
                                 {filteredNotifications.map((item, index) => {
                                     const isUnread = !item.isRead;
@@ -628,7 +595,6 @@ function NotificationsPage() {
                                     const timeAgo = formatTimeAgo(item.createdAt);
                                     const isMenuOpen = openMenuId === item._id;
 
-                                    // Position dropdown popup upwards if it's the last item so it never gets clipped
                                     const isLastItem =
                                         index >= filteredNotifications.length - 1;
 
@@ -646,12 +612,10 @@ function NotificationsPage() {
                                                     : ""
                                             }`}
                                         >
-                                            {/* Unread Indicator Bar */}
                                             {isUnread && (
                                                 <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-sky-500" />
                                             )}
 
-                                            {/* Sender Avatar with Corner Type Badge */}
                                             <div
                                                 className="relative shrink-0 pt-0.5"
                                                 onClick={(e) => {
@@ -672,7 +636,6 @@ function NotificationsPage() {
                                                 <TypeBadge type={item.type} />
                                             </div>
 
-                                            {/* Center Content: Username, action text, time, comment preview */}
                                             <div className="min-w-0 flex-1 pt-0.5">
                                                 <p className="text-sm leading-snug text-zinc-700">
                                                     <span
@@ -692,14 +655,12 @@ function NotificationsPage() {
                                                     </span>
                                                 </p>
 
-                                                {/* Comment / Reply quote text preview */}
                                                 {commentSnippet && (
                                                     <p className="mt-1 line-clamp-2 rounded-lg bg-zinc-100/70 px-2.5 py-1 text-xs text-zinc-600 sm:text-sm">
                                                         "{commentSnippet}"
                                                     </p>
                                                 )}
 
-                                                {/* Post caption if no comment preview */}
                                                 {!commentSnippet && item.post?.caption && (
                                                     <p className="mt-1 truncate text-xs text-zinc-500">
                                                         {item.post.caption}
@@ -707,12 +668,10 @@ function NotificationsPage() {
                                                 )}
                                             </div>
 
-                                            {/* Right Section Actions */}
                                             <div
                                                 className="flex shrink-0 items-center gap-2 pt-0.5"
                                                 onClick={(e) => e.stopPropagation()}
                                             >
-                                                {/* Follow / Following Back Button */}
                                                 {item.type === "follow" && senderId && (
                                                     <button
                                                         type="button"
@@ -734,7 +693,6 @@ function NotificationsPage() {
                                                     </button>
                                                 )}
 
-                                                {/* Post Thumbnail Preview */}
                                                 {postImage && (
                                                     <div
                                                         onClick={(e) => {
@@ -753,7 +711,6 @@ function NotificationsPage() {
                                                     </div>
                                                 )}
 
-                                                {/* Direct Delete Quick Button */}
                                                 <button
                                                     type="button"
                                                     onClick={(e) =>
@@ -766,7 +723,6 @@ function NotificationsPage() {
                                                     <Trash2 size={16} />
                                                 </button>
 
-                                                {/* 3-Dots More Options Menu */}
                                                 <div className="relative">
                                                     <button
                                                         type="button"
@@ -789,7 +745,6 @@ function NotificationsPage() {
                                                         <MoreHorizontal size={18} />
                                                     </button>
 
-                                                    {/* Dropdown Menu - Positioned safely above or below */}
                                                     {isMenuOpen && (
                                                         <div
                                                             ref={menuRef}
@@ -800,7 +755,6 @@ function NotificationsPage() {
                                                                     : "top-9"
                                                             }`}
                                                         >
-                                                            {/* View Profile */}
                                                             {senderId && (
                                                                 <button
                                                                     type="button"
@@ -822,7 +776,6 @@ function NotificationsPage() {
                                                                 <div className="my-1 border-t border-zinc-100" />
                                                             )}
 
-                                                            {/* Delete Notification Option */}
                                                             <button
                                                                 type="button"
                                                                 onClick={(e) =>
@@ -849,7 +802,6 @@ function NotificationsPage() {
                 </div>
             </div>
 
-            {/* Confirmation Modal for Clear All Notifications */}
             {showDeleteAllModal && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs animate-in fade-in duration-150"
@@ -893,7 +845,6 @@ function NotificationsPage() {
                 </div>
             )}
 
-            {/* Toast Feedback Notification */}
             {toastMessage && (
                 <div className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 md:bottom-8">
                     <div className="flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-4 py-2 text-xs font-medium text-white shadow-lg animate-in slide-in-from-bottom-2 duration-150">

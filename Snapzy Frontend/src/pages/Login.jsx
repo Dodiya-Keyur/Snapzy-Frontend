@@ -4,16 +4,13 @@ import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 
 function Login() {
-
     const navigate = useNavigate();
-
     const { checkAuth } = useAuth();
 
     const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
-
 
     async function handleLogin(e) {
         e.preventDefault();
@@ -27,7 +24,6 @@ function Login() {
                 password,
             });
 
-            // Refresh authentication state after login
             const currentUser = await checkAuth();
 
             if (!currentUser) {
@@ -50,22 +46,16 @@ function Login() {
         }
     }
 
-
     return (
         <div className="min-h-screen bg-slate-200 flex items-center justify-center px-4">
             <div className="w-full max-w-md">
-
-                {/* Logo */}
                 <div className="text-center mb-8">
-
                     <p className="mt-2 text-sm text-gray-500">
                         Welcome back! Login to your account.
                     </p>
                 </div>
 
-                {/* Login Card */}
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
-
                     <h2 className="text-2xl font-bold text-gray-900">
                         Login
                     </h2>
@@ -75,8 +65,6 @@ function Login() {
                     </p>
 
                     <form onSubmit={handleLogin} className="mt-7 space-y-5">
-
-                        {/* Email */}
                         <div>
                             <label
                                 htmlFor="identifier"
@@ -96,7 +84,6 @@ function Login() {
                             />
                         </div>
 
-                        {/* Password */}
                         <div>
                             <div className="flex items-center justify-between mb-2">
                                 <label
@@ -134,7 +121,6 @@ function Login() {
                             </p>
                         )}
 
-                        {/* Remember Me */}
                         <div className="flex items-center gap-2">
                             <input
                                 id="remember"
@@ -150,8 +136,6 @@ function Login() {
                             </label>
                         </div>
 
-
-                        {/* Login Button */}
                         <button
                             type="submit"
                             disabled={loading}
@@ -159,10 +143,8 @@ function Login() {
                         >
                             {loading ? "Logging in..." : "Login"}
                         </button>
-
                     </form>
 
-                    {/* Register */}
                     <p className="mt-6 text-center text-sm text-gray-500">
                         Don't have an account?{" "}
                         <Link
@@ -172,7 +154,6 @@ function Login() {
                             Create account
                         </Link>
                     </p>
-
                 </div>
             </div>
         </div>

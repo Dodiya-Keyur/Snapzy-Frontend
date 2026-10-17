@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ImagePlus, X, Hash, Send, MapPin } from "lucide-react";
@@ -15,22 +14,16 @@ function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Handle image selection
   const handleImageChange = (e) => {
-
     const file = e.target.files?.[0];
-
-    // Allow the user to cancel file selection
     if (!file) return;
 
-    // Validate image type
     if (!file.type.startsWith("image/")) {
       setMessage("Please select a valid image.");
       e.target.value = "";
       return;
     }
 
-    // Validate image size: maximum 5 MB
     if (file.size > 5 * 1024 * 1024) {
       setMessage("Image size must be less than 5 MB.");
       e.target.value = "";
@@ -42,7 +35,6 @@ function CreatePost() {
     setPreview(URL.createObjectURL(file));
   };
 
-  // Clean up temporary image preview URLs
   useEffect(() => {
     return () => {
       if (preview) {
@@ -51,7 +43,6 @@ function CreatePost() {
     };
   }, [preview]);
 
-  // Remove selected image
   const removeImage = () => {
     setImage(null);
     setPreview(null);
@@ -60,7 +51,6 @@ function CreatePost() {
     if (input) input.value = "";
   };
 
-  // Submit post
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -89,7 +79,7 @@ function CreatePost() {
         formData.append("hashtags", formattedTags);
       }
 
-      const response = await api.post(
+      await api.post(
         "/posts/create-post",
         formData
       );
@@ -126,13 +116,11 @@ function CreatePost() {
           onSubmit={handleSubmit}
           className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
         >
-          {/* Image Upload */}
           <div className="mb-6">
             <label className="mb-2 block text-sm font-semibold text-gray-700">
               Image
             </label>
 
-            {/* Always mounted, even when preview is visible */}
             <input
               id="image"
               name="image"
@@ -186,7 +174,6 @@ function CreatePost() {
             )}
           </div>
 
-          {/* Caption */}
           <div className="mb-6">
             <label
               htmlFor="caption"
@@ -210,7 +197,6 @@ function CreatePost() {
             </div>
           </div>
 
-          {/* Location */}
           <div className="mb-6">
             <label
               htmlFor="location"
@@ -236,7 +222,6 @@ function CreatePost() {
             </div>
           </div>
 
-          {/* Hashtags */}
           <div className="mb-6">
             <label
               htmlFor="hashtags"
@@ -266,7 +251,6 @@ function CreatePost() {
             </p>
           </div>
 
-          {/* Error Message */}
           {message && (
             <p
               role="alert"
@@ -276,7 +260,6 @@ function CreatePost() {
             </p>
           )}
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}

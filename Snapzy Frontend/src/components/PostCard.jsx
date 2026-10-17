@@ -22,7 +22,6 @@ const DEFAULT_USER = {
     avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face",
 };
 
-// Shared following cache & in-flight promise to avoid redundant API requests across PostCards
 let myFollowingCache = null;
 let myFollowingPromise = null;
 
@@ -52,7 +51,6 @@ const fetchMyFollowingIds = async () => {
     return myFollowingPromise;
 };
 
-// Shared saved posts cache & in-flight promise to avoid redundant API requests across PostCards
 let mySavedPostsCache = null;
 let mySavedPostsPromise = null;
 
@@ -110,7 +108,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         (currentUserName && authorUsername && currentUserName.toLowerCase() === authorUsername.toLowerCase())
     );
 
-    // Navigate to user profile
     const handleOpenProfile = (e) => {
         if (e) {
             e.preventDefault();
@@ -127,7 +124,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         }
     };
 
-    // States
     const [liked, setLiked] = useState(Boolean(post.isLiked ?? post.liked));
     const [likesCount, setLikesCount] = useState(
         Math.max(0, post.likesCount ?? post.likes ?? 0)
@@ -143,7 +139,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
     });
     const [saveLoading, setSaveLoading] = useState(false);
 
-    // Fetch initial saved status and listen for cross-post saved changes
     useEffect(() => {
         if (!postId) return;
 
@@ -183,7 +178,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
     const [followLoading, setFollowLoading] = useState(false);
     const [showUnfollowModal, setShowUnfollowModal] = useState(false);
 
-    // Sync initial follow status & keep state updated across cards
     useEffect(() => {
         if (!postAuthorId || isOwnPost) return;
 
@@ -209,7 +203,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         };
     }, [postAuthorId, isOwnPost, postUser.isFollowing]);
 
-    // Modal scroll lock and ESC key handling
     useEffect(() => {
         if (!showUnfollowModal) return;
 
@@ -229,7 +222,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         };
     }, [showUnfollowModal]);
 
-    // Fetch initial isLiked and verified likesCount from backend (only if not already provided)
     useEffect(() => {
         if (!post?._id) return;
 
@@ -261,13 +253,11 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         };
     }, [post?._id, post.isLiked, post.likesCount]);
 
-    // Micro-interactions
     const [showHeartBurst, setShowHeartBurst] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const [copied, setCopied] = useState(false);
     const menuRef = useRef(null);
 
-    // Comments & Live Count
     const [showComments, setShowComments] = useState(false);
     const initialCommentCount = Number(
         post.commentCount ??
@@ -278,7 +268,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
     ) || 0;
     const [commentCount, setCommentCount] = useState(initialCommentCount);
 
-    // Sync count when post prop changes
     useEffect(() => {
         const count =
             post.commentCount ??
@@ -292,7 +281,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         }
     }, [post.commentCount, post.commentsCount, post.totalComments, post.comments]);
 
-    // Live sync across different cards/views when comments or replies are added or deleted
     useEffect(() => {
         if (!postId) return;
 
@@ -312,7 +300,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         };
     }, [postId]);
 
-    // Close menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -330,7 +317,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
     const handleLike = async () => {
         if (likeLoading || !post?._id) return;
         const nextLiked = !liked;
-        // Optimistic UI update
         setLiked(nextLiked);
         setLikesCount((prev) => (nextLiked ? prev + 1 : Math.max(0, prev - 1)));
 
@@ -354,7 +340,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
             }
         } catch (err) {
             console.warn("Like action failed:", err);
-            // Revert state on error
             setLiked(!nextLiked);
             setLikesCount((prev) => (!nextLiked ? prev + 1 : Math.max(0, prev - 1)));
         } finally {
@@ -375,7 +360,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         if (!postId || saveLoading) return;
         const nextSaved = !saved;
 
-        // Optimistic UI update
         setSaved(nextSaved);
         if (mySavedPostsCache) {
             if (nextSaved) {
@@ -399,7 +383,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
             }
         } catch (err) {
             console.warn("Save action failed:", err);
-            // Revert state on error
             setSaved(!nextSaved);
             if (mySavedPostsCache) {
                 if (!nextSaved) {
@@ -418,7 +401,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         }
     };
 
-    // Follow button click handler
     const handleFollowButtonClick = (e) => {
         if (e) {
             e.preventDefault();
@@ -427,15 +409,12 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         if (isOwnPost || followLoading || !postAuthorId) return;
 
         if (isFollowing) {
-            // Give popup to confirm unfollow user
             setShowUnfollowModal(true);
         } else {
-            // Follow user directly
             executeFollow();
         }
     };
 
-    // Follow user directly
     const executeFollow = async () => {
         if (!postAuthorId || followLoading) return;
 
@@ -455,7 +434,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
             await api.post(`/follows/follow/${postAuthorId}`);
         } catch (err) {
             console.warn("Follow action failed:", err);
-            // 409 means user is already followed
             if (err.response?.status !== 409) {
                 setIsFollowing(false);
                 if (myFollowingCache) {
@@ -472,7 +450,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
         }
     };
 
-    // Confirmed unfollow from modal
     const handleConfirmUnfollow = async () => {
         if (!postAuthorId || followLoading) return;
 
@@ -493,7 +470,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
             await api.delete(`/follows/unfollow/${postAuthorId}`);
         } catch (err) {
             console.warn("Unfollow action failed:", err);
-            // 404 means user is already not followed
             if (err.response?.status !== 404) {
                 setIsFollowing(true);
                 if (myFollowingCache) {
@@ -521,7 +497,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                 });
                 return;
             } catch {
-                // Ignore cancel
             }
         }
 
@@ -538,10 +513,8 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
     return (
         <>
             <article className="w-full bg-white border border-gray-200/90 rounded-2xl overflow-hidden shadow-xs hover:shadow-sm transition-shadow">
-                {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-3 min-w-0">
-                        {/* Profile Picture */}
                         <img
                             src={authorAvatar}
                             alt={authorUsername}
@@ -557,7 +530,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                             }}
                         />
                         <div className="min-w-0">
-                            {/* Username */}
                             <button
                                 type="button"
                                 onClick={handleOpenProfile}
@@ -582,7 +554,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                        {/* Follow / Following Button (hidden on user's own post) */}
                         {!isOwnPost && postAuthorId && (
                             <button
                                 type="button"
@@ -608,7 +579,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                             </button>
                         )}
 
-                        {/* Options Menu */}
                         <div className="relative" ref={menuRef}>
                             <button
                                 onClick={() => setShowMenu((prev) => !prev)}
@@ -648,7 +618,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                     </div>
                 </div>
 
-                {/* Post Image with Double-Tap Like animation */}
                 <div
                     className="relative w-full aspect-[4/3] sm:aspect-[16/10] bg-gray-900 flex items-center justify-center overflow-hidden cursor-pointer select-none"
                     onDoubleClick={handleDoubleTap}
@@ -664,7 +633,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                         <div className="text-gray-400 text-sm">No image available</div>
                     )}
 
-                    {/* Animated Heart Burst on Double Tap */}
                     {showHeartBurst && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none animate-ping">
                             <Heart size={90} className="fill-white text-white drop-shadow-2xl" />
@@ -672,10 +640,8 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                     )}
                 </div>
 
-                {/* Actions Row */}
                 <div className="flex items-center justify-between px-4 pt-3.5 pb-1">
                     <div className="flex items-center gap-4">
-                        {/* Like Button */}
                         <div className="flex items-center">
                             <button
                                 onClick={handleLike}
@@ -692,7 +658,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                             </span>
                         </div>
 
-                        {/* Comment Button */}
                         <div className="flex items-center">
                             <button
                                 onClick={() => setShowComments(true)}
@@ -706,7 +671,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                             </span>
                         </div>
 
-                        {/* Share Button */}
                         <button
                             onClick={handleShare}
                             className="relative hover:scale-110 active:scale-95 transition-transform text-gray-800 hover:text-gray-900"
@@ -720,7 +684,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                         </button>
                     </div>
 
-                    {/* Bookmark / Save Button */}
                     <button
                         type="button"
                         onClick={handleSave}
@@ -736,9 +699,7 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                     </button>
                 </div>
 
-                {/* Caption, Hashtags & Comments Section */}
                 <div className="px-4 pt-2 pb-3.5 space-y-1.5">
-                    {/* Caption */}
                     {post.caption && (
                         <p className="text-sm text-gray-800 leading-5 break-words">
                             <button
@@ -753,7 +714,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                         </p>
                     )}
 
-                    {/* Hashtags */}
                     {Array.isArray(post.hashtags) && post.hashtags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 pt-0.5">
                             {post.hashtags.map((tag, idx) => {
@@ -770,7 +730,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                         </div>
                     )}
 
-                    {/* View all comments button */}
                     {commentCount > 0 ? (
                         <button
                             onClick={() => setShowComments(true)}
@@ -789,7 +748,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                 </div>
             </article>
 
-            {/* Unfollow Confirmation Modal */}
             {showUnfollowModal &&
                 createPortal(
                     <div
@@ -803,7 +761,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                             className="w-full max-w-sm bg-white rounded-2xl p-6 shadow-2xl border border-gray-100 flex flex-col items-center text-center animate-in zoom-in-95 duration-150"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {/* User Avatar */}
                             <div className="relative mb-3.5">
                                 <img
                                     src={authorAvatar}
@@ -812,7 +769,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                                 />
                             </div>
 
-                            {/* Modal Title */}
                             <h3
                                 id="unfollow-modal-title"
                                 className="text-lg font-bold text-gray-900 mb-1.5"
@@ -820,7 +776,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                                 Unfollow @{authorUsername}?
                             </h3>
 
-                            {/* Confirmation Subtitle */}
                             <p className="text-sm text-gray-500 mb-6 leading-relaxed px-1">
                                 Are you sure you want to unfollow{" "}
                                 <span className="font-semibold text-gray-800">
@@ -829,7 +784,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                                 ? You won&apos;t see their latest posts in your feed anymore.
                             </p>
 
-                            {/* Actions */}
                             <div className="w-full flex flex-col gap-2">
                                 <button
                                     type="button"
@@ -861,7 +815,6 @@ const PostCard = ({ post, currentUser: propCurrentUser }) => {
                     document.body
                 )}
 
-            {/* Comments Popup Modal */}
             {showComments && (
                 <CommentModal
                     post={{

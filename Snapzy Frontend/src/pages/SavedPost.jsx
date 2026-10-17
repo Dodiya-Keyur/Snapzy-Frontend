@@ -15,14 +15,13 @@ function SavedPost() {
   const [savedPosts, setSavedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [viewMode, setViewMode] = useState("grid"); // "grid" | "feed"
+  const [viewMode, setViewMode] = useState("grid");
   const [selectedPost, setSelectedPost] = useState(null);
 
   useEffect(() => {
     fetchSavedPosts();
   }, []);
 
-  // Listen for live save/unsave changes
   useEffect(() => {
     const handleSavedChange = (e) => {
       if (e.detail?.postId && e.detail.isSaved === false) {
@@ -57,7 +56,6 @@ function SavedPost() {
 
       const response = await api.get("/users/me/saved-posts");
 
-      // Adjust according to backend response structure
       const posts =
         response.data?.savedPosts ??
         response.data?.data?.savedPosts ??
@@ -97,10 +95,8 @@ function SavedPost() {
   const getPost = (item) => item?.post || item;
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-6  lg:px-8 mt-[-25px] md:mt-0">
+    <div className="min-h-screen bg-gray-50 px-4 py-6 lg:px-8 mt-[-25px] md:mt-0">
       <div className="mx-auto max-w-5xl">
-
-        {/* Page Header */}
         <div className="mb-8 flex items-center justify-between border-b border-gray-200 pb-6">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-900 text-white shadow-sm">
@@ -118,7 +114,6 @@ function SavedPost() {
           </div>
         </div>
 
-        {/* Post Count and View Switcher */}
         {!loading && !error && savedPosts.length > 0 && (
           <div className="mb-5 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -130,7 +125,6 @@ function SavedPost() {
               </span>
             </div>
 
-            {/* View Mode Switcher: Grid vs Feed */}
             <div className="flex items-center gap-1 bg-gray-200/80 p-1 rounded-xl">
               <button
                 type="button"
@@ -162,7 +156,6 @@ function SavedPost() {
           </div>
         )}
 
-        {/* Loading */}
         {loading && (
           <div className="flex min-h-72 flex-col items-center justify-center gap-3">
             <LoaderCircle
@@ -175,7 +168,6 @@ function SavedPost() {
           </div>
         )}
 
-        {/* Error */}
         {!loading && error && (
           <div className="rounded-2xl border border-red-100 bg-white px-6 py-12 text-center shadow-xs">
             <p className="text-sm text-red-600">{error}</p>
@@ -189,7 +181,6 @@ function SavedPost() {
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && !error && savedPosts.length === 0 && (
           <div className="flex min-h-80 flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white px-6 text-center shadow-xs">
             <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full border-2 border-gray-300 text-gray-400">
@@ -214,7 +205,6 @@ function SavedPost() {
           </div>
         )}
 
-        {/* Saved Posts - Feed View */}
         {!loading && !error && savedPosts.length > 0 && viewMode === "feed" && (
           <div className="mx-auto flex max-w-[650px] flex-col gap-6">
             {savedPosts.map((item) => {
@@ -225,7 +215,6 @@ function SavedPost() {
           </div>
         )}
 
-        {/* Saved Posts - Grid View */}
         {!loading && !error && savedPosts.length > 0 && viewMode === "grid" && (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4">
             {savedPosts.map((item, index) => {
@@ -255,7 +244,6 @@ function SavedPost() {
                     </div>
                   )}
 
-                  {/* Hover Overlay */}
                   <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/70 via-transparent to-transparent p-3 opacity-100 transition sm:p-4 sm:opacity-0 sm:group-hover:opacity-100">
                     <div className="flex items-center gap-2 text-white">
                       <Bookmark
@@ -274,7 +262,6 @@ function SavedPost() {
                     )}
                   </div>
 
-                  {/* Bookmark Indicator */}
                   <div className="absolute right-2 top-2 rounded-full bg-black/50 p-2 text-white backdrop-blur-sm shadow-xs">
                     <Bookmark
                       size={15}
@@ -288,7 +275,6 @@ function SavedPost() {
         )}
       </div>
 
-      {/* Selected Post Detail Modal showing full PostCard */}
       {selectedPost && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-3 sm:p-4 backdrop-blur-xs animate-in fade-in"
@@ -298,7 +284,6 @@ function SavedPost() {
             className="relative flex flex-col w-full max-w-lg max-h-[92vh] overflow-hidden rounded-3xl bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Top Bar */}
             <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 bg-white">
               <div className="flex items-center gap-2">
                 <Bookmark size={16} className="fill-black text-black" />
@@ -316,7 +301,6 @@ function SavedPost() {
               </button>
             </div>
 
-            {/* PostCard inside modal */}
             <div className="overflow-y-auto p-2 sm:p-4 bg-gray-50">
               <PostCard post={selectedPost} />
             </div>

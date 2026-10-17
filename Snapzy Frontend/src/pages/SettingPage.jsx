@@ -46,7 +46,6 @@ function SettingsPage() {
   const [showLoginActivityModal, setShowLoginActivityModal] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  // Show transient toast
   const triggerToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => {
@@ -54,7 +53,6 @@ function SettingsPage() {
     }, 2500);
   };
 
-  // Load current settings from backend on mount
   useEffect(() => {
     async function loadSettings() {
       try {
@@ -83,7 +81,6 @@ function SettingsPage() {
     loadSettings();
   }, []);
 
-  // Sync setting toggle to backend API
   const persistSettingChange = async (updatePayload) => {
     try {
       await api.patch("/users/me/settings", updatePayload);
@@ -115,7 +112,6 @@ function SettingsPage() {
     persistSettingChange({ notifications: nextNotifications });
   };
 
-  // Logout via Backend API
   const handleLogout = async () => {
     try {
       setLogoutLoading(true);
@@ -132,7 +128,6 @@ function SettingsPage() {
     }
   };
 
-  // Delete Account via Backend API
   const handleDeleteAccount = async () => {
     try {
       setDeleteLoading(true);
@@ -160,8 +155,6 @@ function SettingsPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8 mt-[-20px] md:mt-0">
       <div className="mx-auto max-w-4xl">
-
-        {/* Transient Toast Notification */}
         {toastMessage && (
           <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-black px-4 py-2.5 text-xs font-semibold text-white shadow-lg animate-bounce">
             <Check size={14} className="text-emerald-400" />
@@ -169,7 +162,6 @@ function SettingsPage() {
           </div>
         )}
 
-        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-black text-white shadow-sm">
@@ -189,8 +181,6 @@ function SettingsPage() {
         </div>
 
         <div className="space-y-6">
-
-          {/* Account Section */}
           <SettingsSection
             title="Account"
             description="Manage your personal account information and login security"
@@ -217,7 +207,6 @@ function SettingsPage() {
             />
           </SettingsSection>
 
-          {/* Privacy Section */}
           <SettingsSection
             title="Privacy"
             description="Control who can interact with your account and view your status"
@@ -246,7 +235,6 @@ function SettingsPage() {
             />
           </SettingsSection>
 
-          {/* Notifications Section */}
           <SettingsSection
             title="Notifications"
             description="Choose which push and in-app alerts you want to receive"
@@ -284,7 +272,6 @@ function SettingsPage() {
             />
           </SettingsSection>
 
-          {/* Security Section */}
           <SettingsSection
             title="Security"
             description="Protect your Snapzy account and review active sessions"
@@ -304,7 +291,6 @@ function SettingsPage() {
             />
           </SettingsSection>
 
-          {/* Logout Section */}
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xs">
             <button
               type="button"
@@ -337,7 +323,6 @@ function SettingsPage() {
             </button>
           </div>
 
-          {/* Danger Zone Section */}
           <div className="overflow-hidden rounded-2xl border border-red-200 bg-white shadow-xs">
             <div className="border-b border-red-100 bg-red-50/40 px-5 py-4">
               <h2 className="font-bold text-red-600">
@@ -374,12 +359,9 @@ function SettingsPage() {
               />
             </button>
           </div>
-
         </div>
-
       </div>
 
-      {/* ================= LOGIN ACTIVITY MODAL ================= */}
       {showLoginActivityModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
           <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl animate-in fade-in duration-200">
@@ -469,7 +451,6 @@ function SettingsPage() {
         </div>
       )}
 
-      {/* ================= DELETE ACCOUNT CONFIRMATION MODAL ================= */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
           <div className="w-full max-w-md rounded-2xl border border-red-200 bg-white p-6 shadow-2xl animate-in fade-in duration-200">
@@ -516,14 +497,9 @@ function SettingsPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
-
-/* -----------------------------
-   Settings Section
------------------------------ */
 
 function SettingsSection({ title, description, children }) {
   return (
@@ -544,10 +520,6 @@ function SettingsSection({ title, description, children }) {
     </section>
   );
 }
-
-/* -----------------------------
-   Clickable Settings Item
------------------------------ */
 
 function SettingsItem({
   icon,
@@ -582,10 +554,6 @@ function SettingsItem({
     </button>
   );
 }
-
-/* -----------------------------
-   Toggle Settings Item
------------------------------ */
 
 function ToggleItem({
   icon,

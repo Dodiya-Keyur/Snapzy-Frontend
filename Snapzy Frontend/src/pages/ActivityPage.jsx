@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import api from "../api/axios";
 
-// Default fallback avatar
 const DEFAULT_AVATAR =
   "https://i.pinimg.com/474x/64/99/f8/6499f89b3bd815780d60f2cbc210b2bd.jpg";
 
@@ -165,7 +164,6 @@ function ActivitySkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
 
-      {/* Rows Skeleton */}
       <div className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-2xs divide-y divide-gray-100">
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex items-center gap-4 p-4 sm:p-5">
@@ -201,7 +199,6 @@ function ActivityPage() {
   const [sort, setSort] = useState("newest");
   const [selectedPost, setSelectedPost] = useState(null);
 
-  // Fetch activities from backend
   const fetchActivities = useCallback(async (isRefresh = false) => {
     try {
       if (isRefresh) {
@@ -211,7 +208,6 @@ function ActivityPage() {
       }
       setError(null);
 
-      // Attempt unified activities API first
       try {
         const response = await api.get("/users/me/activities");
         const data = response.data || {};
@@ -220,7 +216,6 @@ function ActivityPage() {
         if (data.stats) {
           setStats(data.stats);
         } else {
-          // Compute locally
           setStats({
             all: items.length,
             like: items.filter((a) => a.type === "like").length,
@@ -230,7 +225,6 @@ function ActivityPage() {
           });
         }
       } catch (backendErr) {
-        // Fallback: Query all individual endpoints (likes, saved, comments, follows)
         console.warn("Unified activities API failed, falling back to individual routes:", backendErr);
         const [likesRes, savedRes, commentsRes, followingRes] = await Promise.allSettled([
           api.get("/users/me/liked-post"),
@@ -242,7 +236,6 @@ function ActivityPage() {
         const fallbackItems = [];
         const missingUserIds = new Set();
 
-        // 1. Likes
         if (likesRes.status === "fulfilled") {
           const rawLikes =
             likesRes.value.data?.likedPost ||
@@ -273,7 +266,6 @@ function ActivityPage() {
           });
         }
 
-        // 2. Saved Posts
         if (savedRes.status === "fulfilled") {
           const rawSaved =
             savedRes.value.data?.savedPosts ||
@@ -302,7 +294,6 @@ function ActivityPage() {
           });
         }
 
-        // 3. Comments
         if (commentsRes.status === "fulfilled") {
           const rawComments =
             commentsRes.value.data?.comments ||
@@ -331,7 +322,6 @@ function ActivityPage() {
           });
         }
 
-        // 4. Following
         if (followingRes.status === "fulfilled") {
           const rawFollowing =
             followingRes.value.data?.following ||
@@ -354,7 +344,6 @@ function ActivityPage() {
           });
         }
 
-        // Fetch any missing author usernames in parallel
         if (missingUserIds.size > 0) {
           try {
             const userProfiles = await Promise.allSettled(
@@ -380,7 +369,6 @@ function ActivityPage() {
               }
             });
           } catch {
-            // Ignore error
           }
         }
 
@@ -410,16 +398,13 @@ function ActivityPage() {
     fetchActivities();
   }, [fetchActivities]);
 
-  // Filter and sort activities
   const filteredActivities = useMemo(() => {
     let result = [...activities];
 
-    // Filter by type
     if (activeFilter !== "all") {
       result = result.filter((item) => item.type === activeFilter);
     }
 
-    // Filter by search query
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       result = result.filter((item) => {
@@ -430,7 +415,6 @@ function ActivityPage() {
       });
     }
 
-    // Sort
     result.sort((a, b) => {
       const dateA = new Date(a.createdAt || 0).getTime();
       const dateB = new Date(b.createdAt || 0).getTime();
@@ -440,7 +424,6 @@ function ActivityPage() {
     return result;
   }, [activities, activeFilter, search, sort]);
 
-  // Group activities by smart date label
   const groupedActivities = useMemo(() => {
     const groups = {};
     for (const item of filteredActivities) {
@@ -461,7 +444,6 @@ function ActivityPage() {
     { id: "follow", label: "Follows", count: stats.follow || 0 },
   ];
 
-  // Helper to open post preview
   const handleItemClick = (activity) => {
     if (activity.type === "follow") {
       if (activity.userId) {
@@ -481,7 +463,6 @@ function ActivityPage() {
     <div className="min-h-screen bg-slate-50/70 px-4 py-4 pb-20 sm:px-6 sm:py-8 lg:px-8">
 
       <div className="mx-auto w-full max-w-5xl">
-        {/* Header */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
@@ -493,11 +474,9 @@ function ActivityPage() {
           </div>
         </div>
 
-        {/* Loading State */}
         {loading ? (
           <ActivitySkeleton />
         ) : error ? (
-          /* Error State */
           <div className="flex flex-col items-center justify-center rounded-2xl border border-rose-100 bg-white px-6 py-14 text-center shadow-2xs">
             <div className="mb-3.5 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-500">
               <AlertCircle size={28} />
@@ -518,9 +497,7 @@ function ActivityPage() {
           </div>
         ) : (
           <>
-            {/* Search + Sort Bar */}
             <div className="mb-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
-              {/* Search Box */}
               <div className="relative flex-1">
                 <Search
                   size={18}
@@ -545,11 +522,9 @@ function ActivityPage() {
                 )}
               </div>
 
-              {/* Custom Sort Dropdown */}
               <CustomSortDropdown value={sort} onChange={setSort} />
             </div>
 
-            {/* Filter Tabs with Zero Gray Scrollbar Line */}
             <div
               className="mb-6 flex gap-1.5 overflow-x-auto pb-1 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -580,12 +555,10 @@ function ActivityPage() {
               })}
             </div>
 
-            {/* Activity Feed Container */}
             <div className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-2xs">
               {Object.keys(groupedActivities).length > 0 ? (
                 Object.entries(groupedActivities).map(([dateLabel, items]) => (
                   <div key={dateLabel}>
-                    {/* Date Section Header */}
                     <div className="border-b border-gray-100 bg-gray-50/60 px-4 py-2.5 sm:px-6">
                       <div className="flex items-center justify-between">
                         <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500">
@@ -597,7 +570,6 @@ function ActivityPage() {
                       </div>
                     </div>
 
-                    {/* Activity Items List */}
                     <div className="divide-y divide-gray-100">
                       {items.map((activity) => {
                         const hasPost = Boolean(activity.postId || activity.postImage);
@@ -607,7 +579,6 @@ function ActivityPage() {
                             onClick={() => handleItemClick(activity)}
                             className="group flex cursor-pointer items-start gap-3.5 p-4 transition-colors hover:bg-gray-50/70 sm:gap-4 sm:p-5"
                           >
-                            {/* Left: Thumbnail or Avatar with Badge */}
                             <div className="relative shrink-0">
                               {activity.type === "follow" || !activity.postImage ? (
                                 <img
@@ -631,13 +602,11 @@ function ActivityPage() {
                                 </div>
                               )}
 
-                              {/* Activity Badge */}
                               <div className="absolute -bottom-1 -right-1">
                                 <ActivityBadge type={activity.type} />
                               </div>
                             </div>
 
-                            {/* Middle: Content */}
                             <div className="min-w-0 flex-1 pt-0.5">
                               <p className="text-xs text-gray-800 sm:text-sm">
                                 <span className="text-gray-500">You </span>
@@ -661,34 +630,29 @@ function ActivityPage() {
                                 </button>
                               </p>
 
-                              {/* Comment Snippet */}
                               {activity.type === "comment" && activity.commentText && (
                                 <div className="mt-1.5 rounded-xl border border-sky-100 bg-sky-50/50 px-3 py-2 text-xs text-sky-950 sm:text-sm">
                                   <p className="italic">“{activity.commentText}”</p>
                                 </div>
                               )}
 
-                              {/* Post Caption Preview */}
                               {activity.caption && activity.type !== "follow" && (
                                 <p className="mt-1 line-clamp-1 text-xs text-gray-500">
                                   {activity.caption}
                                 </p>
                               )}
 
-                              {/* Followed user details */}
                               {activity.type === "follow" && activity.caption && (
                                 <p className="mt-0.5 text-xs text-gray-400">
                                   {activity.caption}
                                 </p>
                               )}
 
-                              {/* Time */}
                               <p className="mt-1.5 text-[11px] font-medium text-gray-400">
                                 {formatTimeAgo(activity.createdAt)}
                               </p>
                             </div>
 
-                            {/* Right Arrow / Action hint */}
                             <div className="self-center pr-1 text-gray-400 transition group-hover:translate-x-0.5 group-hover:text-gray-700">
                               <ChevronRight size={18} />
                             </div>
@@ -699,7 +663,6 @@ function ActivityPage() {
                   </div>
                 ))
               ) : (
-                /* Empty State */
                 <div className="flex min-h-[320px] flex-col items-center justify-center px-6 py-12 text-center">
                   <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400">
                     <Sparkles size={24} />
@@ -736,7 +699,6 @@ function ActivityPage() {
         )}
       </div>
 
-      {/* Selected Post Preview Modal */}
       {selectedPost && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs animate-in fade-in duration-150"
@@ -746,7 +708,6 @@ function ActivityPage() {
             className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-white shadow-2xl animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 sm:px-5">
               <div className="flex items-center gap-2.5">
                 <img
@@ -784,7 +745,6 @@ function ActivityPage() {
               </button>
             </div>
 
-            {/* Modal Image */}
             <div className="relative aspect-square max-h-[55vh] w-full bg-black flex items-center justify-center overflow-hidden">
               {selectedPost.postImage ? (
                 <img
@@ -800,9 +760,7 @@ function ActivityPage() {
               )}
             </div>
 
-            {/* Modal Body */}
             <div className="p-4 sm:p-5 space-y-3">
-              {/* Comment text if it was a comment */}
               {selectedPost.type === "comment" && selectedPost.commentText && (
                 <div className="rounded-xl border border-sky-100 bg-sky-50/60 p-3 text-xs text-sky-950 sm:text-sm">
                   <span className="font-semibold text-sky-800">Your comment: </span>
@@ -810,7 +768,6 @@ function ActivityPage() {
                 </div>
               )}
 
-              {/* Caption */}
               {selectedPost.caption && (
                 <p className="text-xs text-gray-700 sm:text-sm line-clamp-3">
                   <span className="font-semibold text-gray-900">
@@ -820,7 +777,6 @@ function ActivityPage() {
                 </p>
               )}
 
-              {/* Action Buttons */}
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                 {selectedPost.userId && (
                   <button

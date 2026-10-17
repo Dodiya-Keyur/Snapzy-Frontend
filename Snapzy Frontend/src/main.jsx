@@ -1,4 +1,3 @@
-
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -8,17 +7,14 @@ import {
 
 import "./index.css";
 
-// Context
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 
-// Layout
 import App from "./App.jsx";
 
 import PublicRoute from "./routes/PublicRoute";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
-// Pages
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
@@ -33,10 +29,9 @@ import LikedPost from "./pages/LikedPost.jsx";
 import SettingPage from "./pages/SettingPage.jsx";
 import ChangePassword from "./pages/ChangePassword.jsx";
 import AccountInformation from "./pages/AccountInformation.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
 import EditPost from "./pages/EditPost.jsx";
 import PageNotFound from "./pages/PageNotFound.jsx";
-
-// Router configuration
 
 const router = createBrowserRouter([
   {
@@ -137,6 +132,10 @@ const router = createBrowserRouter([
         path: "/register",
         element: <Register />,
       },
+      {
+        path: "/forgot-password",
+        element: <ForgotPassword />,
+      },
     ],
   },
   {
@@ -145,8 +144,6 @@ const router = createBrowserRouter([
   },
 ]);
 
-
-// Render application
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <AuthProvider>
@@ -156,4 +153,3 @@ createRoot(document.getElementById("root")).render(
     </AuthProvider>
   </StrictMode>
 );
-

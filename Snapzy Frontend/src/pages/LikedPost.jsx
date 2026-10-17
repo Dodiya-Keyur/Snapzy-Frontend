@@ -29,7 +29,6 @@ function LikedPost() {
 
       const response = await api.get("/users/me/liked-post");
 
-      // Backend returns { message: "...", likedPost: [...] }
       const posts =
         response.data?.likedPost ??
         response.data?.likedPosts ??
@@ -40,7 +39,6 @@ function LikedPost() {
       setLikedPosts(Array.isArray(posts) ? posts : []);
     } catch (err) {
       console.error("Error fetching liked posts:", err);
-      // Graceful error or empty state
       if (err.response?.status === 401) {
         setLikedPosts([]);
       } else {
@@ -76,12 +74,10 @@ function LikedPost() {
 
     try {
       setUnlikingId(postId);
-      // Call backend unlike endpoint
       await api.delete(`/posts/${postId}/unlike`);
     } catch (err) {
       console.warn("Backend unlike request failed, removing locally:", err);
     } finally {
-      // Remove from local list
       setLikedPosts((prev) =>
         prev.filter((p) => getPostId(p) !== postId)
       );
@@ -95,8 +91,6 @@ function LikedPost() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8 mt-[-25px] md:mt-0">
       <div className="mx-auto max-w-5xl">
-
-        {/* Page Header */}
         <div className="mb-8 flex items-center gap-4 border-b border-gray-200 pb-6">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-900 text-white shadow-sm">
             <Heart size={27} className="fill-rose-500 text-rose-500" />
@@ -112,7 +106,6 @@ function LikedPost() {
           </div>
         </div>
 
-        {/* Post Count */}
         {!loading && !error && (
           <div className="mb-5 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-gray-700">
@@ -126,7 +119,6 @@ function LikedPost() {
           </div>
         )}
 
-        {/* Loading */}
         {loading && (
           <div className="flex min-h-72 flex-col items-center justify-center gap-3">
             <LoaderCircle
@@ -139,7 +131,6 @@ function LikedPost() {
           </div>
         )}
 
-        {/* Error */}
         {!loading && error && (
           <div className="rounded-2xl border border-red-100 bg-white px-6 py-12 text-center shadow-xs">
             <p className="text-sm text-red-600">{error}</p>
@@ -153,7 +144,6 @@ function LikedPost() {
           </div>
         )}
 
-        {/* Empty State (Styled exactly like Saved Posts) */}
         {!loading && !error && likedPosts.length === 0 && (
           <div className="flex min-h-80 flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white px-6 text-center">
             <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full border-2 border-gray-300 text-gray-400">
@@ -178,7 +168,6 @@ function LikedPost() {
           </div>
         )}
 
-        {/* Liked Posts Grid */}
         {!loading && !error && likedPosts.length > 0 && (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4">
             {likedPosts.map((item, index) => {
@@ -208,7 +197,6 @@ function LikedPost() {
                     </div>
                   )}
 
-                  {/* Hover Overlay */}
                   <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/75 via-black/20 to-transparent p-3 opacity-100 transition sm:p-4 sm:opacity-0 sm:group-hover:opacity-100">
                     <div className="flex items-center justify-between text-white">
                       <div className="flex items-center gap-1.5">
@@ -221,7 +209,6 @@ function LikedPost() {
                         </span>
                       </div>
 
-                      {/* Quick Unlike on Hover */}
                       <button
                         type="button"
                         onClick={(e) => handleUnlike(e, item)}
@@ -242,7 +229,6 @@ function LikedPost() {
                     )}
                   </div>
 
-                  {/* Heart Indicator Badge */}
                   <div className="absolute right-2 top-2 rounded-full bg-black/40 p-2 text-white backdrop-blur-sm shadow-xs">
                     <Heart
                       size={15}
@@ -256,7 +242,6 @@ function LikedPost() {
         )}
       </div>
 
-      {/* Selected Post Detail Modal */}
       {selectedPost && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs"
@@ -266,7 +251,6 @@ function LikedPost() {
             className="relative flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-50 text-rose-500">
@@ -286,7 +270,6 @@ function LikedPost() {
               </button>
             </div>
 
-            {/* Modal Image */}
             <div className="relative aspect-video max-h-[60vh] w-full bg-black flex items-center justify-center">
               {getImage(getPost(selectedPost)) ? (
                 <img
@@ -299,7 +282,6 @@ function LikedPost() {
               )}
             </div>
 
-            {/* Modal Body */}
             <div className="flex flex-col gap-3 p-4">
               {getPost(selectedPost)?.caption && (
                 <p className="text-sm text-gray-800">

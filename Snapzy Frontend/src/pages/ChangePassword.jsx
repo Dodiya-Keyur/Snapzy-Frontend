@@ -40,7 +40,6 @@ function ChangePassword() {
     setSuccessMessage("");
   };
 
-  // Password strength helper
   const getPasswordStrength = (pass) => {
     if (!pass) return { score: 0, label: "", color: "" };
     let score = 0;
@@ -61,7 +60,6 @@ function ChangePassword() {
     setErrorMessage("");
     setSuccessMessage("");
 
-    // Client-side validations
     if (!formData.oldpassword || !formData.newpassword || !formData.newconfirmpassword) {
       setErrorMessage("All password fields are required.");
       return;
@@ -100,14 +98,12 @@ function ChangePassword() {
         res.data?.message || "Password changed successfully! Keep your new password safe."
       );
 
-      // Clear input fields on success
       setFormData({
         oldpassword: "",
         newpassword: "",
         newconfirmpassword: "",
       });
 
-      // Optional auto-redirect after 2.5s
       setTimeout(() => {
         navigate("/setting");
       }, 2500);
@@ -126,8 +122,6 @@ function ChangePassword() {
   return (
     <div className="min-h-screen bg-gray-50 px-3.5 py-4 sm:px-6 sm:py-6 pb-28 md:pb-12">
       <div className="mx-auto max-w-2xl">
-
-        {/* Back Link & Header */}
         <div className="mb-6">
           <Link
             to="/setting"
@@ -153,7 +147,6 @@ function ChangePassword() {
           </div>
         </div>
 
-        {/* Success Alert */}
         {successMessage && (
           <div className="mb-6 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 transition">
             <div className="mt-0.5 rounded-full bg-emerald-100 p-1 text-emerald-600">
@@ -168,7 +161,6 @@ function ChangePassword() {
           </div>
         )}
 
-        {/* Error Alert */}
         {errorMessage && (
           <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-800 transition">
             <div className="mt-0.5 rounded-full bg-red-100 p-1 text-red-600">
@@ -178,12 +170,10 @@ function ChangePassword() {
           </div>
         )}
 
-        {/* Form Card */}
         <form
           onSubmit={handleSubmit}
           className="space-y-6 rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 shadow-xs"
         >
-          {/* Current Password */}
           <div>
             <label
               htmlFor="oldpassword"
@@ -220,7 +210,6 @@ function ChangePassword() {
           </div>
 
           <div className="border-t border-gray-100 pt-5">
-            {/* New Password */}
             <div>
               <label
                 htmlFor="newpassword"
@@ -255,7 +244,6 @@ function ChangePassword() {
                 </button>
               </div>
 
-              {/* Password strength indicator */}
               {formData.newpassword && (
                 <div className="mt-2.5 space-y-1.5">
                   <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
@@ -281,7 +269,6 @@ function ChangePassword() {
               )}
             </div>
 
-            {/* Confirm New Password */}
             <div className="mt-5">
               <label
                 htmlFor="newconfirmpassword"
@@ -316,7 +303,6 @@ function ChangePassword() {
                 </button>
               </div>
 
-              {/* Match indicator */}
               {formData.newconfirmpassword && (
                 <p className="mt-2 text-xs font-medium">
                   {formData.newpassword === formData.newconfirmpassword ? (
@@ -333,7 +319,6 @@ function ChangePassword() {
             </div>
           </div>
 
-          {/* Security Recommendations Card */}
           <div className="rounded-xl border border-gray-100 bg-gray-50/80 p-4">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">
               <ShieldCheck size={16} className="text-blue-500" />
@@ -355,7 +340,6 @@ function ChangePassword() {
             </ul>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
@@ -375,7 +359,6 @@ function ChangePassword() {
             </button>
           </div>
         </form>
-
       </div>
     </div>
   );

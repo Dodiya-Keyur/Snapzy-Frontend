@@ -29,12 +29,10 @@ function MobileHeader() {
     const { user, setUser } = useAuth();
     const { unreadCount, hasUnread } = useNotification();
 
-    // Close menu when route changes
     useEffect(() => {
         setIsMenuOpen(false);
     }, [location.pathname, location.search]);
 
-    // Prevent background scrolling and hide header & bottom nav when menu is open
     useEffect(() => {
         if (isMenuOpen) {
             document.body.style.overflow = "hidden";
@@ -49,7 +47,6 @@ function MobileHeader() {
         };
     }, [isMenuOpen]);
 
-    // Close on Escape key press
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === "Escape") {
@@ -162,13 +159,11 @@ function MobileHeader() {
 
     return (
         <>
-            {/* ================= FIXED MOBILE TOP HEADER ================= */}
             <header
                 id="mobile-top-header"
                 className="fixed left-0 right-0 top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur-md md:hidden transition-all duration-200"
             >
                 <div className="flex h-16 items-center justify-between px-4">
-                    {/* Logo */}
                     <NavLink to="/" className="flex items-center gap-2.5 active:opacity-80">
                         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 shadow-sm shadow-pink-500/20">
                             <Camera
@@ -182,9 +177,7 @@ function MobileHeader() {
                         </span>
                     </NavLink>
 
-                    {/* Right Header Actions: Notification + 3 Horizontal Lines Menu */}
                     <div className="flex items-center gap-1.5">
-                        {/* Notification Bell */}
                         <NavLink
                             to="/notifications"
                             aria-label="Notifications"
@@ -195,13 +188,11 @@ function MobileHeader() {
                                 strokeWidth={2}
                                 className="text-gray-900"
                             />
-                            {/* Notification Badge - Red Dot */}
                             {hasUnread && (
                                 <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500 animate-pulse" />
                             )}
                         </NavLink>
 
-                        {/* 3 Horizontal Lines (Hamburger Menu Button) */}
                         <button
                             type="button"
                             onClick={() => setIsMenuOpen(true)}
@@ -218,7 +209,6 @@ function MobileHeader() {
                 </div>
             </header>
 
-            {/* ================= FULL SCREEN POPUP (PORTALED TO ROOT) ================= */}
             {typeof document !== "undefined" &&
                 createPortal(
                     <div
@@ -230,7 +220,6 @@ function MobileHeader() {
                         aria-modal="true"
                         aria-label="Settings and activity full screen menu"
                     >
-                        {/* Full Screen Top Header */}
                         <div className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 shadow-xs">
                             <div className="flex items-center gap-3">
                                 <button
@@ -259,9 +248,7 @@ function MobileHeader() {
                             </button>
                         </div>
 
-                        {/* Full Screen Scrollable Body */}
                         <div className="flex-1 overflow-y-auto px-4 py-4 pb-16 space-y-5">
-                            {/* Account Overview Card */}
                             <div
                                 onClick={() => handleNavigate("/profile")}
                                 className="flex cursor-pointer items-center justify-between rounded-2xl border border-gray-200/80 bg-white p-4 shadow-xs transition hover:bg-gray-50 active:scale-[0.99]"
@@ -290,7 +277,6 @@ function MobileHeader() {
                                 <ChevronRight size={18} className="text-gray-400" />
                             </div>
 
-                            {/* Menu Options Groups */}
                             {menuSections.map((group) => (
                                 <div key={group.section} className="space-y-1.5">
                                     <p className="px-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
@@ -342,7 +328,6 @@ function MobileHeader() {
                                 </div>
                             ))}
 
-                            {/* Logout Option */}
                             <div className="pt-2">
                                 <button
                                     type="button"

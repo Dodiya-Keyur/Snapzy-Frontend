@@ -19,12 +19,12 @@ const CommentModal = ({
 }) => {
     const [text, setText] = useState("");
     const [comments, setComments] = useState([]);
-    const [repliesMap, setRepliesMap] = useState({}); // { [commentId]: Reply[] }
-    const [expandedIds, setExpandedIds] = useState([]); // thread IDs where replies are visible
+    const [repliesMap, setRepliesMap] = useState({});
+    const [expandedIds, setExpandedIds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
-    const [replyingTo, setReplyingTo] = useState(null); // { id: parentCommentId, username: string }
+    const [replyingTo, setReplyingTo] = useState(null);
     const [likedIds, setLikedIds] = useState([]);
     const [error, setError] = useState(null);
 
@@ -45,7 +45,6 @@ const CommentModal = ({
         (currentUsername && postAuthorUsername && currentUsername.toLowerCase() === postAuthorUsername.toLowerCase())
     );
 
-    // Close on Escape + lock body scroll while modal is open
     useEffect(() => {
         const onKey = (e) => e.key === "Escape" && onClose();
         document.addEventListener("keydown", onKey);
@@ -61,7 +60,6 @@ const CommentModal = ({
         };
     }, [onClose]);
 
-    // Fetch comments and their replies on modal open
     useEffect(() => {
         if (!postId) return;
         let isMounted = true;
@@ -70,14 +68,12 @@ const CommentModal = ({
 
         const fetchCommentsAndReplies = async () => {
             try {
-                // 1. Fetch top-level comments for the post
                 const res = await api.get(`/comments/posts/${postId}/comments`);
                 if (!isMounted) return;
 
                 const fetchedComments = res.data?.comments || [];
                 setComments(fetchedComments);
 
-                // 2. Fetch replies for each top-level comment in parallel
                 const repliesResults = await Promise.all(
                     fetchedComments.map(async (c) => {
                         const cId = (c._id || c.id)?.toString();
@@ -96,14 +92,12 @@ const CommentModal = ({
                 const newRepliesMap = Object.fromEntries(repliesResults);
                 setRepliesMap(newRepliesMap);
 
-                // Calculate total count (top-level + all replies)
                 const totalReplies = Object.values(newRepliesMap).reduce(
                     (sum, list) => sum + (Array.isArray(list) ? list.length : 0),
                     0
                 );
                 const totalCalculated = fetchedComments.length + totalReplies;
 
-                // Sync total count with parent and other views
                 if (onCommentCountChange) {
                     onCommentCountChange(totalCalculated);
                 }
@@ -131,7 +125,6 @@ const CommentModal = ({
         };
     }, [postId, onCommentCountChange]);
 
-    // Broadcast count changes
     const notifyCountChange = (delta) => {
         if (onCommentCountChange) {
             onCommentCountChange((prev) => Math.max(0, prev + delta));
@@ -143,7 +136,6 @@ const CommentModal = ({
         );
     };
 
-    // Start replying to a comment or a reply
     const startReply = (target, parentCommentId = null) => {
         const parentId = (parentCommentId || target.parentComment || target._id || target.id)?.toString();
         const username = target.user?.username || target.username || "user";
@@ -154,7 +146,6 @@ const CommentModal = ({
         });
         setText(`@${username} `);
 
-        // Auto-expand replies for this comment so the user sees the thread
         if (parentId) {
             setExpandedIds((prev) =>
                 prev.includes(parentId) ? prev : [...prev, parentId]
@@ -175,10 +166,8 @@ const CommentModal = ({
             return;
         }
 
-        // Expand
         setExpandedIds((prev) => [...prev, commentId]);
 
-        // If replies not loaded yet, fetch them on demand
         if (!repliesMap[commentId]) {
             try {
                 const rRes = await api.get(`/comments/comment/${commentId}/replies`);
@@ -195,13 +184,11 @@ const CommentModal = ({
     const handleChange = (e) => {
         const val = e.target.value;
         setText(val);
-        // If user clears the input completely, cancel the reply mode
         if (replyingTo && val === "") {
             setReplyingTo(null);
         }
     };
 
-    // Post a new comment or reply
     const handleSubmit = async (e) => {
         e.preventDefault();
         const value = text.trim();
@@ -212,7 +199,6 @@ const CommentModal = ({
 
         try {
             if (replyingTo?.id) {
-                // Post a reply
                 const res = await api.post(`/comments/comment/${replyingTo.id}/replies`, {
                     replytext: value,
                 });
@@ -242,7 +228,6 @@ const CommentModal = ({
                 setReplyingTo(null);
                 setText("");
             } else {
-                // Post a top-level comment
                 const res = await api.post(`/comments/posts/${postId}/comments`, {
                     commentText: value,
                 });
@@ -268,7 +253,6 @@ const CommentModal = ({
 
                 setText("");
 
-                // Scroll to newest comment
                 setTimeout(() => {
                     listEndRef.current?.scrollIntoView({ behavior: "smooth" });
                 }, 100);
@@ -283,7 +267,6 @@ const CommentModal = ({
         }
     };
 
-    // Delete a comment or reply
     const handleDelete = async (item, parentCommentId = null) => {
         const commentId = (item._id || item.id)?.toString();
         if (!commentId || deletingId) return;
@@ -295,7 +278,6 @@ const CommentModal = ({
             await api.delete(`/comments/comment/${commentId}`);
 
             if (parentCommentId) {
-                // Deleted a reply
                 setRepliesMap((prev) => ({
                     ...prev,
                     [parentCommentId]: (prev[parentCommentId] || []).filter(
@@ -304,7 +286,6 @@ const CommentModal = ({
                 }));
                 notifyCountChange(-1);
             } else {
-                // Deleted a top-level comment
                 const repliesCount = repliesMap[commentId]?.length || 0;
                 setComments((prev) =>
                     prev.filter((c) => (c._id || c.id)?.toString() !== commentId)
@@ -314,7 +295,6 @@ const CommentModal = ({
                     delete copy[commentId];
                     return copy;
                 });
-                // Decrement count by 1 (or 1 + replies)
                 notifyCountChange(-1 - repliesCount);
             }
 
@@ -327,7 +307,6 @@ const CommentModal = ({
         }
     };
 
-    // Permission check for delete: allowed by comment author OR post owner
     const canDelete = (item) => {
         const authorId = (item.user?._id || (typeof item.user === "string" ? item.user : ""))?.toString();
         const authorName = item.user?.username || item.username || "";
@@ -346,12 +325,10 @@ const CommentModal = ({
         );
     };
 
-    // Input only has "@username" mention and nothing else
     const isEmpty =
         !text.trim() ||
         (replyingTo && text.trim() === `@${replyingTo.username}`);
 
-    // Helper to render mention styled differently if comment/reply starts with @username
     const renderCommentText = (commentText) => {
         if (!commentText) return null;
         const mentionMatch = commentText.match(/^(@[a-zA-Z0-9_.-]+)\s*(.*)$/);
@@ -368,7 +345,6 @@ const CommentModal = ({
         return <span>{commentText}</span>;
     };
 
-    // Render a single comment or reply item
     const renderItem = (item, isReply = false, parentCommentId = null) => {
         const itemId = (item._id || item.id)?.toString();
         const itemUser = item.user || {};
@@ -384,7 +360,6 @@ const CommentModal = ({
 
         return (
             <div key={itemId} className="flex items-start gap-3 group">
-                {/* Avatar */}
                 <img
                     src={authorAvatar}
                     alt={authorName}
@@ -392,7 +367,6 @@ const CommentModal = ({
                         }`}
                 />
 
-                {/* Content & Actions */}
                 <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-800 leading-5 break-words">
                         <span className="font-semibold text-gray-900 mr-1.5 hover:underline cursor-pointer">
@@ -404,7 +378,6 @@ const CommentModal = ({
                     <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
                         <span>{formatTimeAgo(item.createdAt)}</span>
 
-                        {/* Reply button */}
                         <button
                             type="button"
                             onClick={() => startReply(item, parentCommentId)}
@@ -413,7 +386,6 @@ const CommentModal = ({
                             Reply
                         </button>
 
-                        {/* Delete button (visible if user is comment creator or post owner) */}
                         {canDelete(item) && (
                             <button
                                 type="button"
@@ -435,7 +407,6 @@ const CommentModal = ({
                     </div>
                 </div>
 
-                {/* Like Button */}
                 <button
                     type="button"
                     onClick={() => toggleCommentLike(itemId)}
@@ -463,7 +434,6 @@ const CommentModal = ({
                 className="flex w-full md:max-w-4xl h-[85vh] md:h-[80vh] bg-white rounded-t-2xl md:rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-150"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Left: post image (desktop only) */}
                 <div className="hidden md:flex md:w-1/2 bg-black items-center justify-center overflow-hidden">
                     {post.image ? (
                         <img
@@ -478,9 +448,7 @@ const CommentModal = ({
                     )}
                 </div>
 
-                {/* Right: comments list and input */}
                 <div className="flex flex-col w-full md:w-1/2 min-w-0 bg-white">
-                    {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0">
                         <div className="flex items-center gap-3 min-w-0">
                             <img
@@ -518,7 +486,6 @@ const CommentModal = ({
                         </button>
                     </div>
 
-                    {/* Error Notice */}
                     {error && (
                         <div className="px-4 py-2 bg-red-50 border-b border-red-100 flex items-center justify-between text-xs text-red-700">
                             <span>{error}</span>
@@ -532,9 +499,7 @@ const CommentModal = ({
                         </div>
                     )}
 
-                    {/* Comments List */}
                     <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-                        {/* Caption as first item */}
                         {post.caption && (
                             <div className="flex items-start gap-3 pb-3 border-b border-gray-100">
                                 <img
@@ -560,7 +525,6 @@ const CommentModal = ({
                             </div>
                         )}
 
-                        {/* Loading spinner */}
                         {loading && (
                             <div className="py-12 flex flex-col items-center justify-center text-gray-400 gap-2">
                                 <Loader2 size={24} className="animate-spin text-blue-600" />
@@ -568,7 +532,6 @@ const CommentModal = ({
                             </div>
                         )}
 
-                        {/* Empty comments placeholder */}
                         {!loading && comments.length === 0 && (
                             <div className="py-12 text-center">
                                 <p className="text-base font-semibold text-gray-800">
@@ -580,7 +543,6 @@ const CommentModal = ({
                             </div>
                         )}
 
-                        {/* Comments & Replies list */}
                         {!loading &&
                             comments.map((c) => {
                                 const cId = (c._id || c.id)?.toString();
@@ -589,10 +551,8 @@ const CommentModal = ({
 
                                 return (
                                     <div key={cId} className="space-y-2">
-                                        {/* Top-level comment */}
                                         {renderItem(c, false, null)}
 
-                                        {/* Replies toggle button & list */}
                                         {replies.length > 0 && (
                                             <div className="ml-11">
                                                 <button
@@ -607,7 +567,6 @@ const CommentModal = ({
                                                         }`}
                                                 </button>
 
-                                                {/* Expanded replies thread */}
                                                 {isExpanded && (
                                                     <div className="mt-2.5 space-y-3 border-l-2 border-gray-100 pl-3">
                                                         {replies.map((r) =>
@@ -624,7 +583,6 @@ const CommentModal = ({
                         <div ref={listEndRef} />
                     </div>
 
-                    {/* Replying-to status bar */}
                     {replyingTo && (
                         <div className="flex items-center justify-between px-4 py-2 text-xs text-gray-600 bg-gray-50 border-t border-gray-200 shrink-0">
                             <span className="truncate">
@@ -644,7 +602,6 @@ const CommentModal = ({
                         </div>
                     )}
 
-                    {/* Comment/Reply Input Form */}
                     <form
                         onSubmit={handleSubmit}
                         className="flex items-center gap-3 px-4 py-3 border-t border-gray-200 shrink-0 bg-white"

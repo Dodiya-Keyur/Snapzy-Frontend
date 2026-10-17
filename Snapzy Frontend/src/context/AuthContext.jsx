@@ -1,4 +1,3 @@
-
 import {
     createContext,
     useContext,
@@ -15,7 +14,6 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Fetch logged-in user from backend
     const fetchUser = useCallback(async () => {
         try {
             const response = await api.get("/users/me");
@@ -40,7 +38,6 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
-    // Runs after refresh or initial application load
     useEffect(() => {
         fetchUser();
     }, [fetchUser]);

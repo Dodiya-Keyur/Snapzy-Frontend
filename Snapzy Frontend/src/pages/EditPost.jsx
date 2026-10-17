@@ -28,7 +28,6 @@ function EditPost() {
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
 
-    // Fetch existing post data
     useEffect(() => {
         let isMounted = true;
 
@@ -53,7 +52,6 @@ function EditPost() {
                     return;
                 }
 
-                // Check ownership if authUser is available
                 const postAuthorId =
                     postData.user?._id || postData.user?.id || postData.user;
                 if (
@@ -71,7 +69,6 @@ function EditPost() {
                 setCaption(postData.caption || "");
                 setLocation(postData.location || "");
 
-                // Format hashtags
                 if (Array.isArray(postData.hashtags)) {
                     setHashtags(postData.hashtags.join(", "));
                 } else if (typeof postData.hashtags === "string") {
@@ -98,7 +95,6 @@ function EditPost() {
         };
     }, [postId, authUser]);
 
-    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!postId) return;
@@ -108,7 +104,6 @@ function EditPost() {
             setError("");
             setSuccessMessage("");
 
-            // Format hashtags array
             const formattedTags = hashtags
                 .split(/[,\s]+/)
                 .map((t) => t.replace(/^#/, "").trim())
@@ -124,7 +119,6 @@ function EditPost() {
 
             setSuccessMessage("Post updated successfully!");
 
-            // Smooth redirect back to profile after brief confirmation
             setTimeout(() => {
                 navigate("/profile", { replace: true });
             }, 800);
@@ -171,7 +165,6 @@ function EditPost() {
     return (
         <div className="min-h-screen bg-gray-50/60 px-4 py-6 md:py-8">
             <div className="mx-auto max-w-2xl">
-                {/* Header Navigation */}
                 <div className="mb-6 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button
@@ -193,7 +186,6 @@ function EditPost() {
                     </div>
                 </div>
 
-                {/* Notifications */}
                 {error && (
                     <div className="mb-5 flex items-center gap-2.5 rounded-2xl border border-red-200 bg-red-50/80 p-4 text-sm text-red-700">
                         <AlertCircle size={18} className="shrink-0 text-red-600" />
@@ -208,12 +200,10 @@ function EditPost() {
                     </div>
                 )}
 
-                {/* Main Card */}
                 <form
                     onSubmit={handleSubmit}
                     className="rounded-3xl border border-gray-200/90 bg-white shadow-xs overflow-hidden"
                 >
-                    {/* Post Image Preview */}
                     {postImage ? (
                         <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full bg-black/95 flex items-center justify-center overflow-hidden">
                             <img
@@ -232,7 +222,6 @@ function EditPost() {
                     )}
 
                     <div className="p-5 sm:p-6 space-y-5">
-                        {/* Caption Field */}
                         <div>
                             <label
                                 htmlFor="caption"
@@ -255,7 +244,6 @@ function EditPost() {
                             </div>
                         </div>
 
-                        {/* Location Field */}
                         <div>
                             <label
                                 htmlFor="location"
@@ -279,7 +267,6 @@ function EditPost() {
                             </div>
                         </div>
 
-                        {/* Hashtags Field */}
                         <div>
                             <label
                                 htmlFor="hashtags"
@@ -306,7 +293,6 @@ function EditPost() {
                             </p>
                         </div>
 
-                        {/* Action Buttons */}
                         <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
                             <button
                                 type="button"

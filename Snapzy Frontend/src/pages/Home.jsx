@@ -12,7 +12,6 @@ function Home() {
         try {
             setLoading(true);
 
-            // Fetch feed and user relationships in parallel so all states are ready before rendering
             const [feedRes, followingRes, savedRes] = await Promise.allSettled([
                 api.get("/posts/feed"),
                 api.get("/users/me/following"),
@@ -26,7 +25,6 @@ function Home() {
 
             const rawPosts = Array.isArray(feedPosts) ? feedPosts : [];
 
-            // Extract following IDs
             let followingSet = new Set();
             if (followingRes.status === "fulfilled") {
                 const list = followingRes.value.data?.following || [];
@@ -44,7 +42,6 @@ function Home() {
                 );
             }
 
-            // Extract saved IDs
             let savedSet = new Set();
             if (savedRes.status === "fulfilled") {
                 const list =
@@ -65,7 +62,6 @@ function Home() {
                 );
             }
 
-            // Check if any post is missing isLiked status
             const needsLikeFetch = rawPosts.filter(
                 (p) => typeof p.isLiked !== "boolean" && p._id
             );
@@ -88,7 +84,6 @@ function Home() {
                 });
             }
 
-            // Enrich all posts completely BEFORE displaying
             const fullyEnrichedPosts = rawPosts.map((post) => {
                 const pId = (post._id || post.id)?.toString();
                 const authorId = (
@@ -160,12 +155,10 @@ function Home() {
         <div className="min-h-screen bg-gray-50 mt-[-30px] md:mt-1">
             <main>
                 <div className="mx-auto flex max-w-[1200px] items-start justify-center gap-20 px-4 py-6 sm:px-6 lg:px-8">
-                    {/* Post Feed */}
                     <section className="w-full max-w-[650px]">
                         <PostFeed posts={posts} onRefresh={fetchPosts} />
                     </section>
 
-                    {/* Right Sidebar */}
                     <aside className="hidden xl:block w-[320px] shrink-0">
                         <RightSidebar />
                     </aside>

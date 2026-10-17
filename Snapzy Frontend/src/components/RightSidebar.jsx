@@ -46,7 +46,6 @@ function RightSidebar() {
     const [following, setFollowing] = useState({});
     const [actionLoadingId, setActionLoadingId] = useState(null);
 
-    // Fetch random suggested users from backend database
     const fetchSuggestions = useCallback(async () => {
         try {
             setLoadingSuggestions(true);
@@ -54,7 +53,6 @@ function RightSidebar() {
             const userList = res.data?.users || [];
             setSuggestions(userList);
 
-            // Populate following status map
             const initialMap = {};
             userList.forEach((u) => {
                 const id = (u._id || u.id)?.toString();
@@ -75,7 +73,6 @@ function RightSidebar() {
         fetchSuggestions();
     }, [fetchSuggestions]);
 
-    // Handle Follow / Unfollow toggle
     const toggleFollow = async (userId) => {
         if (!userId || actionLoadingId === userId) return;
 
@@ -83,7 +80,6 @@ function RightSidebar() {
         const isCurrentlyFollowing = !!following[idStr];
         const nextState = !isCurrentlyFollowing;
 
-        // Optimistic update
         setFollowing((prev) => ({ ...prev, [idStr]: nextState }));
         setActionLoadingId(idStr);
 
@@ -95,14 +91,12 @@ function RightSidebar() {
             }
         } catch (error) {
             console.error("Failed to toggle follow status:", error);
-            // Revert state on error
             setFollowing((prev) => ({ ...prev, [idStr]: isCurrentlyFollowing }));
         } finally {
             setActionLoadingId(null);
         }
     };
 
-    // Switch account handler (logs out and navigates to login)
     const handleSwitch = async () => {
         try {
             await api.post("/auth/logout");
@@ -118,8 +112,6 @@ function RightSidebar() {
 
     return (
         <aside className="sticky top-6 w-80">
-
-            {/* Current User Card */}
             <div className="mb-6 flex items-center justify-between rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 p-4 shadow-sm ring-1 ring-gray-200/70">
                 {authLoading ? (
                     <div className="flex w-full items-center justify-between animate-pulse">
@@ -172,9 +164,7 @@ function RightSidebar() {
                 )}
             </div>
 
-            {/* Suggestions Card */}
             <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-200/70">
-
                 <div className="mb-3 flex items-center justify-between">
                     <p className="text-sm font-semibold text-gray-500">
                         Suggested for you
@@ -263,7 +253,6 @@ function RightSidebar() {
                 )}
             </div>
 
-            {/* Footer */}
             <div className="mt-6 px-2">
                 <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-gray-400">
                     {footerLinks.map((link) => (
@@ -281,7 +270,6 @@ function RightSidebar() {
                     © 2026 Snapzy
                 </p>
             </div>
-
         </aside>
     );
 }

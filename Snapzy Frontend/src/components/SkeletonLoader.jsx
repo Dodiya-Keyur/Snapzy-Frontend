@@ -35,13 +35,11 @@ function SuggestedSkeleton() {
 export default function SkeletonPage() {
     return (
         <div className="min-h-screen bg-gray-50 flex justify-center gap-8 p-6 animate-pulse">
-            {/* Feed */}
             <div className="w-full max-w-xl space-y-6">
                 <PostSkeleton />
                 <PostSkeleton />
             </div>
 
-            {/* Right sidebar (hidden on mobile) */}
             <aside className="hidden lg:block w-80 space-y-5">
                 <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-5">
                     <Bone className="h-4 w-32" />

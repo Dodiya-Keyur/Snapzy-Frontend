@@ -10,7 +10,6 @@ import {
     MapPin,
     LoaderCircle,
     Sparkles,
-    Pencil,
 } from "lucide-react";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
@@ -24,23 +23,20 @@ function SearchPage() {
     const { user: authUser } = useAuth();
 
     const [search, setSearch] = useState("");
-    const [filter, setFilter] = useState("all"); // 'all' | 'user' | 'post'
+    const [filter, setFilter] = useState("all");
     const [users, setUsers] = useState([]);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
 
-    // Track which user IDs are followed
     const [followingIds, setFollowingIds] = useState(new Set());
     const [followingActionId, setFollowingActionId] = useState(null);
 
-    // Selected post for modal detail view
     const [selectedPost, setSelectedPost] = useState(null);
     const [modalIsLiked, setModalIsLiked] = useState(false);
     const [modalLikesCount, setModalLikesCount] = useState(0);
     const [modalLikeLoading, setModalLikeLoading] = useState(false);
 
-    // Fetch isliked and accurate count when opening post modal in search
     useEffect(() => {
         if (!selectedPost) return;
         const postId = selectedPost._id || selectedPost.id;
@@ -76,7 +72,6 @@ function SearchPage() {
         };
     }, [selectedPost]);
 
-    // Handle modal like toggle
     const handleModalLikeToggle = async () => {
         if (!selectedPost || modalLikeLoading) return;
         const postId = selectedPost._id || selectedPost.id;
@@ -121,7 +116,6 @@ function SearchPage() {
 
     const debounceTimerRef = useRef(null);
 
-    // Fetch list of users the current user is following
     const fetchMyFollowing = useCallback(async () => {
         try {
             const res = await api.get("/users/me/following");
@@ -141,14 +135,12 @@ function SearchPage() {
         fetchMyFollowing();
     }, [fetchMyFollowing]);
 
-    // Handle Follow / Unfollow
     const handleToggleFollow = async (userId) => {
         if (!userId || followingActionId === userId) return;
 
         const idStr = userId.toString();
         const isCurrentlyFollowing = followingIds.has(idStr);
 
-        // Optimistic toggle
         setFollowingIds((prev) => {
             const next = new Set(prev);
             if (isCurrentlyFollowing) {
@@ -168,7 +160,6 @@ function SearchPage() {
             }
         } catch (err) {
             console.error("Follow/unfollow error:", err);
-            // Revert on error
             setFollowingIds((prev) => {
                 const next = new Set(prev);
                 if (isCurrentlyFollowing) {
@@ -183,7 +174,6 @@ function SearchPage() {
         }
     };
 
-    // Perform API search
     const executeSearch = useCallback(async (query) => {
         const trimmed = query.trim();
         if (!trimmed) {
@@ -201,11 +191,9 @@ function SearchPage() {
             const encoded = encodeURIComponent(trimmed);
             let res;
 
-            // Attempt standard API route /search
             try {
                 res = await api.get(`/search?q=${encoded}`);
             } catch (err) {
-                // If 404, fallback to root /search (in case backend router lacks /api prefix)
                 if (err.response?.status === 404) {
                     res = await api.get(`/search?q=${encoded}`, {
                         baseURL: "http://localhost:3000",
@@ -230,7 +218,6 @@ function SearchPage() {
         }
     }, []);
 
-    // Live search debouncing
     useEffect(() => {
         if (debounceTimerRef.current) {
             clearTimeout(debounceTimerRef.current);
@@ -253,7 +240,6 @@ function SearchPage() {
         };
     }, [search, executeSearch]);
 
-    // Manual form submit
     const handleSubmit = (e) => {
         e.preventDefault();
         if (debounceTimerRef.current) {
@@ -262,7 +248,6 @@ function SearchPage() {
         executeSearch(search);
     };
 
-    // Quick tag click handler
     const handleQuickSearch = (tag) => {
         setSearch(tag);
         executeSearch(tag);
@@ -275,7 +260,6 @@ function SearchPage() {
         setHasSearched(false);
     };
 
-    // Filtered results
     const showUsers = filter === "all" || filter === "user";
     const showPosts = filter === "all" || filter === "post";
     const totalResultsCount = users.length + posts.length;
@@ -283,7 +267,6 @@ function SearchPage() {
     return (
         <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8 mt-[-30px] md:mt-0">
             <div className="mx-auto w-full max-w-3xl">
-                {/* Page Title Header */}
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
                         Search
@@ -293,7 +276,6 @@ function SearchPage() {
                     </p>
                 </div>
 
-                {/* Filter Tabs */}
                 <div className="mb-4 flex gap-2 rounded-2xl bg-white p-1.5 shadow-xs border border-gray-200/80">
                     <button
                         onClick={() => setFilter("all")}
@@ -326,7 +308,6 @@ function SearchPage() {
                     </button>
                 </div>
 
-                {/* Search Bar Input */}
                 <form onSubmit={handleSubmit} className="mb-6 flex items-center gap-2">
                     <div className="relative flex-1">
                         <Search
@@ -367,7 +348,6 @@ function SearchPage() {
                     </button>
                 </form>
 
-                {/* Loading State */}
                 {loading && (
                     <div className="flex flex-col items-center justify-center py-16 gap-3">
                         <LoaderCircle size={32} className="animate-spin text-gray-800" />
@@ -375,7 +355,6 @@ function SearchPage() {
                     </div>
                 )}
 
-                {/* Initial Blank State (Before Search) */}
                 {!loading && !hasSearched && (
                     <div className="rounded-3xl border border-gray-200/90 bg-white p-8 sm:p-12 text-center shadow-xs">
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 text-blue-600">
@@ -404,10 +383,8 @@ function SearchPage() {
                     </div>
                 )}
 
-                {/* Results Section */}
                 {!loading && hasSearched && (
                     <div className="space-y-6">
-                        {/* Users List Section */}
                         {showUsers && users.length > 0 && (
                             <div className="space-y-3">
                                 {filter === "all" && (
@@ -449,54 +426,35 @@ function SearchPage() {
                                                 <div className="flex items-center gap-3.5 min-w-0">
                                                     <img
                                                         src={userAvatar}
-                                                        alt={u.username}
-                                                        className="h-12 w-12 rounded-full object-cover ring-1 ring-gray-100 shrink-0 group-hover:scale-105 transition-transform"
+                                                        alt={u.username || "User avatar"}
+                                                        className="h-12 w-12 rounded-full object-cover ring-2 ring-gray-100 shrink-0"
                                                     />
-
                                                     <div className="min-w-0">
-                                                        <h3 className="font-semibold text-sm text-gray-900 truncate group-hover:text-blue-600 transition-colors">
-                                                            {u.username}
-                                                        </h3>
-                                                        {u.name && (
-                                                            <p className="text-xs text-gray-600 truncate">
-                                                                {u.name}
+                                                        <div className="flex items-center gap-1.5">
+                                                            <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600 transition">
+                                                                {u.username}
                                                             </p>
-                                                        )}
-                                                        {u.bio && (
-                                                            <p className="mt-0.5 text-xs text-gray-400 line-clamp-1">
-                                                                {u.bio}
-                                                            </p>
-                                                        )}
+                                                        </div>
+                                                        <p className="text-xs text-gray-500 truncate">
+                                                            {u.name || (u.bio ? u.bio.slice(0, 30) : `@${u.username}`)}
+                                                        </p>
                                                     </div>
                                                 </div>
 
-                                                {isSelf ? (
-                                                    <span className="rounded-xl bg-gray-100 px-3.5 py-1.5 text-xs font-semibold text-gray-600 shrink-0">
-                                                        Your Profile
-                                                    </span>
-                                                ) : (
+                                                {!isSelf && (
                                                     <button
                                                         type="button"
+                                                        disabled={isActionLoading}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleToggleFollow(u._id);
                                                         }}
-                                                        disabled={isActionLoading}
-                                                        className={`rounded-xl px-4 py-2 text-xs font-semibold transition active:scale-95 shrink-0 min-w-[90px] text-center ${isFollowing
-                                                            ? "bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200"
-                                                            : "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
+                                                        className={`rounded-full px-4 py-1.5 text-xs font-semibold transition active:scale-95 disabled:opacity-50 shrink-0 ${isFollowing
+                                                            ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                                            : "bg-blue-500 text-white hover:bg-blue-600"
                                                             }`}
                                                     >
-                                                        {isActionLoading ? (
-                                                            <LoaderCircle
-                                                                size={14}
-                                                                className="animate-spin mx-auto"
-                                                            />
-                                                        ) : isFollowing ? (
-                                                            "Following"
-                                                        ) : (
-                                                            "Follow"
-                                                        )}
+                                                        {isFollowing ? "Following" : "Follow"}
                                                     </button>
                                                 )}
                                             </div>
@@ -506,7 +464,6 @@ function SearchPage() {
                             </div>
                         )}
 
-                        {/* Posts Grid Section */}
                         {showPosts && posts.length > 0 && (
                             <div className="space-y-3">
                                 {filter === "all" && (
@@ -539,7 +496,6 @@ function SearchPage() {
                                                     loading="lazy"
                                                 />
 
-                                                {/* Hover Overlay */}
                                                 <div className="absolute inset-0 flex flex-col justify-between bg-black/50 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 text-white">
                                                     <span className="text-xs font-semibold truncate drop-shadow">
                                                         @{postAuthor}
@@ -571,7 +527,6 @@ function SearchPage() {
                             </div>
                         )}
 
-                        {/* No Results Found */}
                         {totalResultsCount === 0 && (
                             <div className="rounded-3xl border border-gray-200/90 bg-white p-12 text-center shadow-xs">
                                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-500">
@@ -589,143 +544,137 @@ function SearchPage() {
                 )}
             </div>
 
-            {/* Post Detail Modal */}
-            {
-                selectedPost &&
+            {selectedPost && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-4 backdrop-blur-xs animate-in fade-in"
+                    onClick={() => setSelectedPost(null)}
+                >
                     <div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-4 backdrop-blur-xs animate-in fade-in"
-                        onClick={() => setSelectedPost(null)}
+                        className="relative flex flex-col w-full max-w-md sm:max-w-lg lg:max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        <div
-                            className="relative flex flex-col w-full max-w-md sm:max-w-lg lg:max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {/* Header */}
-                            <div className="shrink-0 flex items-center justify-between border-b border-gray-100 px-4 py-3 sm:px-5 sm:py-3.5">
-                                <div
-                                    onClick={() => {
-                                        const authorId = selectedPost.user?._id;
-                                        const isSelf =
-                                            authUser &&
-                                            (authUser._id === authorId ||
-                                                authUser.username === selectedPost.user?.username);
-                                        navigate(
-                                            isSelf
-                                                ? "/profile"
-                                                : `/profile/${authorId || selectedPost.user?.username}`
-                                        );
-                                        setSelectedPost(null);
-                                    }}
-                                    className="flex items-center gap-3 cursor-pointer group"
-                                >
-                                    <img
-                                        src={
-                                            selectedPost.user?.profilePicture ||
-                                            selectedPost.user?.avatar ||
-                                            DEFAULT_AVATAR
-                                        }
-                                        alt={selectedPost.user?.username || "author"}
-                                        className="h-9 w-9 rounded-full object-cover ring-1 ring-gray-200 group-hover:ring-blue-500 transition"
-                                    />
-                                    <div>
-                                        <p className="text-sm font-semibold text-gray-900 leading-tight group-hover:text-blue-600 transition">
-                                            {selectedPost.user?.username || "anonymous"}
-                                        </p>
-                                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                                            <span>{formatTimeAgo(selectedPost.createdAt)}</span>
-                                            {selectedPost.location && (
-                                                <>
-                                                    <span>•</span>
-                                                    <span className="flex items-center gap-0.5 capitalize">
-                                                        <MapPin size={11} className="text-gray-400" />
-                                                        {selectedPost.location}
-                                                    </span>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={() => setSelectedPost(null)}
-                                    className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition"
-                                    aria-label="Close modal"
-                                >
-                                    <X size={20} />
-                                </button>
-                            </div>
-
-                            {/* Image */}
-                            <div className="shrink min-h-0 max-h-[46vh] sm:max-h-[50vh] w-full bg-black flex items-center justify-center overflow-hidden">
+                        <div className="shrink-0 flex items-center justify-between border-b border-gray-100 px-4 py-3 sm:px-5 sm:py-3.5">
+                            <div
+                                onClick={() => {
+                                    const authorId = selectedPost.user?._id;
+                                    const isSelf =
+                                        authUser &&
+                                        (authUser._id === authorId ||
+                                            authUser.username === selectedPost.user?.username);
+                                    navigate(
+                                        isSelf
+                                            ? "/profile"
+                                            : `/profile/${authorId || selectedPost.user?.username}`
+                                    );
+                                    setSelectedPost(null);
+                                }}
+                                className="flex items-center gap-3 cursor-pointer group"
+                            >
                                 <img
-                                    src={selectedPost.image || selectedPost.imageUrl}
-                                    alt={selectedPost.caption || "Post preview"}
-                                    className="max-h-[46vh] sm:max-h-[50vh] w-auto max-w-full object-contain"
+                                    src={
+                                        selectedPost.user?.profilePicture ||
+                                        selectedPost.user?.avatar ||
+                                        DEFAULT_AVATAR
+                                    }
+                                    alt={selectedPost.user?.username || "author"}
+                                    className="h-9 w-9 rounded-full object-cover ring-1 ring-gray-200 group-hover:ring-blue-500 transition"
                                 />
-                            </div>
-
-                            {/* Caption & Actions */}
-                            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
-                                <div className="flex items-center gap-6 text-sm text-gray-700">
-                                    <button
-                                        type="button"
-                                        onClick={handleModalLikeToggle}
-                                        disabled={modalLikeLoading}
-                                        className="flex items-center gap-1.5 font-semibold transition hover:opacity-80 active:scale-95 cursor-pointer disabled:opacity-60"
-                                        title={modalIsLiked ? "Unlike post" : "Like post"}
-                                    >
-                                        <Heart
-                                            size={20}
-                                            className={
-                                                modalIsLiked
-                                                    ? "fill-red-500 text-red-500 scale-105 transition-transform"
-                                                    : "text-gray-600 hover:text-red-500 transition-colors"
-                                            }
-                                        />
-                                        <span>
-                                            {Math.max(0, modalLikesCount).toLocaleString()} likes
-                                        </span>
-                                    </button>
-                                    <div className="flex items-center gap-1.5 font-semibold">
-                                        <MessageCircle size={20} className="text-gray-600" />
-                                        <span>
-                                            {Math.max(
-                                                0,
-                                                selectedPost.commentCount ?? selectedPost.comments ?? 0
-                                            ).toLocaleString()}{" "}
-                                            comments
-                                        </span>
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-900 leading-tight group-hover:text-blue-600 transition">
+                                        {selectedPost.user?.username || "anonymous"}
+                                    </p>
+                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                        <span>{formatTimeAgo(selectedPost.createdAt)}</span>
+                                        {selectedPost.location && (
+                                            <>
+                                                <span>•</span>
+                                                <span className="flex items-center gap-0.5 capitalize">
+                                                    <MapPin size={11} className="text-gray-400" />
+                                                    {selectedPost.location}
+                                                </span>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
-
-                                {selectedPost.caption && (
-                                    <p className="text-sm text-gray-800 leading-relaxed">
-                                        <span className="font-semibold text-gray-900 mr-2">
-                                            {selectedPost.user?.username || "creator"}
-                                        </span>
-                                        {selectedPost.caption}
-                                    </p>
-                                )}
-
-                                {Array.isArray(selectedPost.hashtags) && selectedPost.hashtags.length > 0 && (
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {selectedPost.hashtags.map((tag, idx) => (
-                                            <span
-                                                key={idx}
-                                                className="text-xs font-medium text-blue-600"
-                                            >
-                                                {tag.startsWith("#") ? tag : `#${tag}`}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
                             </div>
+
+                            <button
+                                onClick={() => setSelectedPost(null)}
+                                className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition"
+                                aria-label="Close modal"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="shrink min-h-0 max-h-[46vh] sm:max-h-[50vh] w-full bg-black flex items-center justify-center overflow-hidden">
+                            <img
+                                src={selectedPost.image || selectedPost.imageUrl}
+                                alt={selectedPost.caption || "Post preview"}
+                                className="max-h-[46vh] sm:max-h-[50vh] w-auto max-w-full object-contain"
+                            />
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
+                            <div className="flex items-center gap-6 text-sm text-gray-700">
+                                <button
+                                    type="button"
+                                    onClick={handleModalLikeToggle}
+                                    disabled={modalLikeLoading}
+                                    className="flex items-center gap-1.5 font-semibold transition hover:opacity-80 active:scale-95 cursor-pointer disabled:opacity-60"
+                                    title={modalIsLiked ? "Unlike post" : "Like post"}
+                                >
+                                    <Heart
+                                        size={20}
+                                        className={
+                                            modalIsLiked
+                                                ? "fill-red-500 text-red-500 scale-105 transition-transform"
+                                                : "text-gray-600 hover:text-red-500 transition-colors"
+                                        }
+                                    />
+                                    <span>
+                                        {Math.max(0, modalLikesCount).toLocaleString()} likes
+                                    </span>
+                                </button>
+                                <div className="flex items-center gap-1.5 font-semibold">
+                                    <MessageCircle size={20} className="text-gray-600" />
+                                    <span>
+                                        {Math.max(
+                                            0,
+                                            selectedPost.commentCount ?? selectedPost.comments ?? 0
+                                        ).toLocaleString()}{" "}
+                                        comments
+                                    </span>
+                                </div>
+                            </div>
+
+                            {selectedPost.caption && (
+                                <p className="text-sm text-gray-800 leading-relaxed">
+                                    <span className="font-semibold text-gray-900 mr-2">
+                                        {selectedPost.user?.username || "creator"}
+                                    </span>
+                                    {selectedPost.caption}
+                                </p>
+                            )}
+
+                            {Array.isArray(selectedPost.hashtags) && selectedPost.hashtags.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5">
+                                    {selectedPost.hashtags.map((tag, idx) => (
+                                        <span
+                                            key={idx}
+                                            className="text-xs font-medium text-blue-600"
+                                        >
+                                            {tag.startsWith("#") ? tag : `#${tag}`}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
-            }
+                </div>
+            )}
         </div>
     );
 }
 
 export default SearchPage;
-

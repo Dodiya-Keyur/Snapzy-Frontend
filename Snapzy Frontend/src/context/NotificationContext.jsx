@@ -15,7 +15,6 @@ export const NotificationProvider = ({ children }) => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [loadingUnread, setLoadingUnread] = useState(false);
 
-    // Fetch unread count from backend
     const fetchUnreadCount = useCallback(async () => {
         if (!isAuthenticated) {
             setUnreadCount(0);
@@ -29,7 +28,6 @@ export const NotificationProvider = ({ children }) => {
                 setUnreadCount(Math.max(0, response.data.count));
             }
         } catch (error) {
-            // Silently log; avoid spamming console on network hiccups
             console.warn(
                 "Failed to fetch unread count:",
                 error.response?.data?.message || error.message
@@ -39,7 +37,6 @@ export const NotificationProvider = ({ children }) => {
         }
     }, [isAuthenticated]);
 
-    // Initial fetch and user state change
     useEffect(() => {
         if (isAuthenticated) {
             fetchUnreadCount();
@@ -48,7 +45,6 @@ export const NotificationProvider = ({ children }) => {
         }
     }, [isAuthenticated, user?._id, fetchUnreadCount]);
 
-    // Window focus & custom event synchronization
     useEffect(() => {
         if (!isAuthenticated) return;
 
@@ -59,7 +55,6 @@ export const NotificationProvider = ({ children }) => {
         window.addEventListener("focus", handleSync);
         window.addEventListener("snapzy:notifications-changed", handleSync);
 
-        // Periodically refresh unread count every 30 seconds
         const intervalId = setInterval(handleSync, 30000);
 
         return () => {
@@ -69,7 +64,6 @@ export const NotificationProvider = ({ children }) => {
         };
     }, [isAuthenticated, fetchUnreadCount]);
 
-    // Mark all as read API helper
     const markAllAsRead = useCallback(async () => {
         setUnreadCount(0);
         try {
@@ -78,13 +72,11 @@ export const NotificationProvider = ({ children }) => {
             return res.data;
         } catch (error) {
             console.error("Failed to mark all notifications as read:", error);
-            // Re-fetch to sync actual state
             fetchUnreadCount();
             throw error;
         }
     }, [fetchUnreadCount]);
 
-    // Delete single notification API helper
     const deleteNotificationApi = useCallback(
         async (notificationId, wasUnread = false) => {
             if (wasUnread) {
@@ -108,7 +100,6 @@ export const NotificationProvider = ({ children }) => {
         [fetchUnreadCount]
     );
 
-    // Delete all notifications API helper
     const deleteAllNotificationsApi = useCallback(async () => {
         setUnreadCount(0);
         try {
@@ -126,7 +117,6 @@ export const NotificationProvider = ({ children }) => {
         }
     }, [fetchUnreadCount]);
 
-    // Decrement unread count locally
     const decrementUnreadCount = useCallback((amount = 1) => {
         setUnreadCount((prev) => Math.max(0, prev - amount));
     }, []);

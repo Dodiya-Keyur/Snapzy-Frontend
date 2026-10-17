@@ -1,10 +1,8 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 function Register() {
-
     const navigate = useNavigate();
 
     const [username, setUsername] = useState("");
@@ -22,19 +20,16 @@ function Register() {
         const cleanUsername = username.trim().toLowerCase();
         const cleanEmail = email.trim().toLowerCase();
 
-        // Username validation
         if (cleanUsername.length < 3 || cleanUsername.length > 30) {
             setMessage("Username must be between 3 and 30 characters.");
             return;
         }
 
-        // Password validation
         if (password.length < 8) {
             setMessage("Password must be at least 8 characters.");
             return;
         }
 
-        // Confirm password validation
         if (password !== confirmPassword) {
             setMessage("Passwords do not match.");
             return;
@@ -43,7 +38,6 @@ function Register() {
         setLoading(true);
 
         try {
-
             await api.post("/auth/register", {
                 username: cleanUsername,
                 email: cleanEmail,
@@ -51,7 +45,6 @@ function Register() {
                 confirmpassword: confirmPassword,
             });
 
-            // Redirect after successful registration
             navigate("/login", {
                 replace: true,
                 state: {
@@ -70,9 +63,8 @@ function Register() {
     }
 
     return (
-        <div className="flex min-h-screen items-center bg-slate-200 justify-center ">
+        <div className="flex min-h-screen items-center bg-slate-200 justify-center">
             <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm my-5 mx-5">
-
                 <h2 className="text-2xl font-bold text-gray-900">
                     Register
                 </h2>
@@ -81,10 +73,7 @@ function Register() {
                     Create your account and join Snapzy
                 </p>
 
-                {/* Register Form */}
                 <form onSubmit={handleRegister} className="mt-7 space-y-5">
-
-                    {/* Username */}
                     <div>
                         <label
                             htmlFor="username"
@@ -106,7 +95,6 @@ function Register() {
                         />
                     </div>
 
-                    {/* Email */}
                     <div>
                         <label
                             htmlFor="email"
@@ -126,7 +114,6 @@ function Register() {
                         />
                     </div>
 
-                    {/* Password */}
                     <div>
                         <label
                             htmlFor="password"
@@ -147,7 +134,6 @@ function Register() {
                         />
                     </div>
 
-                    {/* Confirm Password */}
                     <div>
                         <label
                             htmlFor="confirmPassword"
@@ -167,7 +153,6 @@ function Register() {
                         />
                     </div>
 
-                    {/* Error Message */}
                     {message && (
                         <p
                             role="alert"
@@ -177,26 +162,23 @@ function Register() {
                         </p>
                     )}
 
-                    {/* Register Button */}
                     <button
                         type="submit"
-                        className="w-full rounded-lg py-3 text-sm font-semibold bg-black text-white transition hover:bg-gray-800bg-blue-700 active:scale-[0.99]"
+                        className="w-full rounded-lg py-3 text-sm font-semibold bg-black text-white transition hover:bg-gray-800 active:scale-[0.99]"
                     >
                         {loading ? "Creating account..." : "Create Account"}
                     </button>
                 </form>
 
-                {/* Login */}
                 <div className="mt-6 text-center text-sm text-gray-500">
                     Already have an account?{" "}
-                    <a
-                        href="/login"
-                        className="font-semibold text-black hover:underline "
+                    <Link
+                        to="/login"
+                        className="font-semibold text-black hover:underline"
                     >
                         Login
-                    </a>
+                    </Link>
                 </div>
-
             </div>
         </div>
     );

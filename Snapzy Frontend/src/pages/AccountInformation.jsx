@@ -96,7 +96,6 @@ function AccountInformation() {
     async function fetchAccountDetails() {
       try {
         setLoading(true);
-        // Try dedicated account-info endpoint first
         try {
           const res = await api.get("/users/me/account-info");
           if (res.data?.account) {
@@ -104,7 +103,6 @@ function AccountInformation() {
             return;
           }
         } catch {
-          // Fallback to /users/me
         }
 
         const fallbackRes = await api.get("/users/me");
@@ -161,8 +159,6 @@ function AccountInformation() {
   return (
     <div className="min-h-screen bg-gray-50 px-3.5 py-4 sm:px-6 sm:py-6 pb-28 md:pb-12">
       <div className="mx-auto max-w-3xl space-y-4 sm:space-y-6">
-
-        {/* Top Back Navigation & Header */}
         <div>
           <Link
             to="/setting"
@@ -204,10 +200,8 @@ function AccountInformation() {
           </div>
         ) : (
           <>
-            {/* Account Profile Card */}
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                {/* User Identity info */}
                 <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
                   <div className="shrink-0 rounded-full p-[2px] bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400">
                     <img
@@ -256,7 +250,6 @@ function AccountInformation() {
                   </div>
                 </div>
 
-                {/* Mobile Responsive Action Buttons: Full-width 2-column grid on mobile */}
                 <div className="grid grid-cols-2 sm:flex sm:flex-col gap-2 pt-2 sm:pt-0 border-t border-gray-100 sm:border-0 w-full sm:w-auto shrink-0">
                   <Link
                     to="/edit-profile"
@@ -287,7 +280,6 @@ function AccountInformation() {
               )}
             </div>
 
-            {/* 1. Account History & Creation Card */}
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xs">
               <div className="border-b border-gray-100 px-4 sm:px-6 py-3.5 sm:py-4">
                 <div className="flex items-center gap-2">
@@ -302,7 +294,6 @@ function AccountInformation() {
               </div>
 
               <div className="divide-y divide-gray-100">
-                {/* Date Created */}
                 <div className="p-4 sm:p-5 hover:bg-gray-50/50 transition">
                   <div className="flex items-start gap-3">
                     <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
@@ -330,7 +321,6 @@ function AccountInformation() {
                   </div>
                 </div>
 
-                {/* Account Age */}
                 <div className="p-4 sm:p-5 hover:bg-gray-50/50 transition">
                   <div className="flex items-start gap-3">
                     <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
@@ -354,7 +344,6 @@ function AccountInformation() {
                   </div>
                 </div>
 
-                {/* Account User ID */}
                 <div className="p-4 sm:p-5 hover:bg-gray-50/50 transition">
                   <div className="flex items-start gap-3">
                     <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-700">
@@ -392,7 +381,6 @@ function AccountInformation() {
                   </div>
                 </div>
 
-                {/* Last Profile Update */}
                 {updatedAt && (
                   <div className="p-4 sm:p-5 hover:bg-gray-50/50 transition">
                     <div className="flex items-start gap-3">
@@ -417,7 +405,6 @@ function AccountInformation() {
               </div>
             </div>
 
-            {/* 2. Private & Contact Details Card */}
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xs">
               <div className="border-b border-gray-100 px-4 sm:px-6 py-3.5 sm:py-4">
                 <div className="flex items-center gap-2">
@@ -432,7 +419,6 @@ function AccountInformation() {
               </div>
 
               <div className="divide-y divide-gray-100">
-                {/* Email Address */}
                 <div className="p-4 sm:p-5 hover:bg-gray-50/50 transition">
                   <div className="flex items-start gap-3">
                     <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
@@ -475,7 +461,6 @@ function AccountInformation() {
                   </div>
                 </div>
 
-                {/* Username */}
                 <div className="p-4 sm:p-5 hover:bg-gray-50/50 transition">
                   <div className="flex items-start gap-3">
                     <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-700">
@@ -496,7 +481,6 @@ function AccountInformation() {
                   </div>
                 </div>
 
-                {/* Password Protection */}
                 <div className="p-4 sm:p-5 hover:bg-gray-50/50 transition">
                   <div className="flex items-start gap-3">
                     <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
@@ -525,7 +509,6 @@ function AccountInformation() {
               </div>
             </div>
 
-            {/* 3. Account Statistics Summary */}
             <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-xs">
               <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-0.5">
                 Account Engagement & Content
@@ -577,7 +560,6 @@ function AccountInformation() {
               </div>
             </div>
 
-            {/* Privacy Protection Notice Footer */}
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 sm:p-5 text-xs text-gray-500 flex items-start gap-3">
               <ShieldCheck size={18} className="text-gray-400 shrink-0 mt-0.5" />
               <div>
@@ -591,7 +573,6 @@ function AccountInformation() {
             </div>
           </>
         )}
-
       </div>
     </div>
   );

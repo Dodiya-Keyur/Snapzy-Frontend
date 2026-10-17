@@ -48,14 +48,12 @@ function EditProfile() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Initialize form with current user data
   useEffect(() => {
     async function loadUserData() {
       try {
         setInitialLoading(true);
         let currentUser = user;
 
-        // Fetch fresh user data directly from backend
         try {
           const res = await api.get("/users/me");
           if (res.data?.User || res.data?.user) {
@@ -90,7 +88,6 @@ function EditProfile() {
     loadUserData();
   }, [user, checkAuth]);
 
-  // Handle text input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -101,7 +98,6 @@ function EditProfile() {
     setSuccessMessage("");
   };
 
-  // Handle profile image file selection
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -123,14 +119,11 @@ function EditProfile() {
     setSuccessMessage("");
   };
 
-  // Trigger hidden file picker
   const handleChoosePhoto = () => {
     fileInputRef.current?.click();
   };
 
-  // Delete / reset profile picture
   const handleDeletePhoto = async () => {
-    // If a local file was chosen, cancel selection and restore previous saved avatar
     if (selectedFile) {
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -162,7 +155,6 @@ function EditProfile() {
     }
   };
 
-  // Handle Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
@@ -170,7 +162,6 @@ function EditProfile() {
     setSaving(true);
 
     try {
-      // 1. If a new image was chosen, upload profile picture first
       if (selectedFile) {
         setUploadingPhoto(true);
         const imageFormData = new FormData();
@@ -184,21 +175,18 @@ function EditProfile() {
         setSelectedFile(null);
       }
 
-      // 2. Update profile text details (name, username, bio)
       await api.patch("/users/me/update-profile", {
         name: formData.name.trim(),
         username: formData.username.trim().toLowerCase(),
         bio: formData.bio.trim(),
       });
 
-      // 3. Refresh user state across the entire application
       if (checkAuth) {
         await checkAuth();
       }
 
       setSuccessMessage("Profile updated successfully!");
 
-      // Optional short delay before navigating back to profile
       setTimeout(() => {
         navigate("/profile");
       }, 1200);
@@ -238,7 +226,6 @@ function EditProfile() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-2xl">
-        {/* Top Header */}
         <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4">
           <div className="flex items-center gap-3">
             <button
@@ -267,7 +254,6 @@ function EditProfile() {
           </Link>
         </div>
 
-        {/* Feedback Alerts */}
         {successMessage && (
           <div className="mb-6 flex items-center gap-2.5 rounded-2xl border border-emerald-200 bg-emerald-50/90 p-4 text-sm text-emerald-800 shadow-xs animate-in fade-in">
             <Check size={18} className="text-emerald-600 shrink-0" />
@@ -282,12 +268,9 @@ function EditProfile() {
           </div>
         )}
 
-        {/* Profile Card Form */}
         <div className="overflow-hidden rounded-3xl border border-gray-200/90 bg-white p-6 shadow-sm sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Profile Picture Upload Section */}
             <div className="flex flex-col items-center justify-center border-b border-gray-100 pb-8 sm:flex-row sm:justify-start sm:gap-6">
-              {/* Photo Avatar */}
               <div className="relative group">
                 <div className="relative h-24 w-24 overflow-hidden rounded-full ring-4 ring-gray-100 shadow-inner sm:h-28 sm:w-28">
                   <img
@@ -305,7 +288,6 @@ function EditProfile() {
                   )}
                 </div>
 
-                {/* Camera Overlay Icon */}
                 <button
                   type="button"
                   onClick={handleChoosePhoto}
@@ -316,7 +298,6 @@ function EditProfile() {
                 </button>
               </div>
 
-              {/* Photo Action Buttons */}
               <div className="mt-4 flex flex-col items-center gap-2 sm:mt-0 sm:items-start">
                 <div className="flex items-center gap-2">
                   <button
@@ -344,7 +325,6 @@ function EditProfile() {
                   Recommended: Square JPG, PNG or WEBP up to 5MB
                 </p>
 
-                {/* Hidden File Input */}
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -355,7 +335,6 @@ function EditProfile() {
               </div>
             </div>
 
-            {/* Name Input */}
             <div>
               <label
                 htmlFor="name"
@@ -376,7 +355,6 @@ function EditProfile() {
               />
             </div>
 
-            {/* Username Input */}
             <div>
               <label
                 htmlFor="username"
@@ -407,7 +385,6 @@ function EditProfile() {
               </p>
             </div>
 
-            {/* Bio Textarea */}
             <div>
               <div className="mb-1.5 flex items-center justify-between">
                 <label
@@ -439,7 +416,6 @@ function EditProfile() {
               />
             </div>
 
-            {/* Actions */}
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
               <button
                 type="button"
@@ -476,4 +452,3 @@ function EditProfile() {
 }
 
 export default EditProfile;
-

@@ -27,12 +27,10 @@ const Sidebar = () => {
     const { setUser } = useAuth();
     const { unreadCount, hasUnread } = useNotification();
 
-    // Close More menu when route changes
     useEffect(() => {
         setIsMoreOpen(false);
     }, [location.pathname]);
 
-    // Close More menu on outside click or Escape key
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (moreMenuRef.current && !moreMenuRef.current.contains(e.target)) {
@@ -127,8 +125,6 @@ const Sidebar = () => {
 
     return (
         <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-gray-200 bg-gray-100 px-4 py-6 hidden md:flex">
-
-            {/* ================= LOGO ================= */}
             <NavLink to="/" className="outline-none">
                 <div className="mb-8 flex items-center gap-3 px-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 shadow-sm shadow-pink-500/20">
@@ -144,7 +140,6 @@ const Sidebar = () => {
                 </div>
             </NavLink>
 
-            {/* ================= MAIN MENU ================= */}
             <nav className="flex-1">
                 <ul className="space-y-2">
                     {menuItems.map((item) => {
@@ -193,9 +188,7 @@ const Sidebar = () => {
                 </ul>
             </nav>
 
-            {/* ================= BOTTOM "MORE" MENU ================= */}
             <div ref={moreMenuRef} className="relative border-t border-gray-300 pt-3">
-                {/* Popup Menu */}
                 {isMoreOpen && (
                     <div
                         role="menu"
@@ -228,10 +221,8 @@ const Sidebar = () => {
                             })}
                         </div>
 
-                        {/* Divider */}
                         <div className="my-1.5 border-t border-gray-100" />
 
-                        {/* Log Out */}
                         <button
                             type="button"
                             onClick={handleLogout}
@@ -243,7 +234,6 @@ const Sidebar = () => {
                     </div>
                 )}
 
-                {/* More Button */}
                 <button
                     type="button"
                     onClick={() => setIsMoreOpen((prev) => !prev)}
@@ -262,7 +252,6 @@ const Sidebar = () => {
                     <span>More</span>
                 </button>
             </div>
-
         </aside>
     );
 };
