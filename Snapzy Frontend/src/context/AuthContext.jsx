@@ -26,10 +26,12 @@ export const AuthProvider = ({ children }) => {
             setUser(currentUser);
             return currentUser;
         } catch (error) {
-            console.error(
-                "Failed to fetch user:",
-                error.response?.data || error.message
-            );
+            if (error.response?.status !== 401) {
+                console.error(
+                    "Failed to fetch user:",
+                    error.response?.data || error.message
+                );
+            }
 
             setUser(null);
             return null;
